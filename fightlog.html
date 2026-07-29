@@ -140,6 +140,11 @@ body {
 .entry-tech, .entry-reflection { font-size: 0.875rem; word-break: break-word; white-space: pre-wrap; }
 .entry-tech { color: #e4e4e7; margin-bottom: 0.375rem; }
 .entry-reflection { color: var(--text-dim); font-style: italic; }
+
+.entry-detail { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
+.entry-detail.open { max-height: 2000px; }
+.entry-toggle { font-size: 0.7rem; color: var(--text-dimmer); cursor: pointer; margin-top: 0.35rem; user-select: none; display: inline-block; }
+.entry-toggle:hover { color: var(--text); }
 .entry-actions { display: flex; flex-direction: column; border-left: 1px solid var(--border); opacity: 0; transition: opacity 0.15s; }
 .entry:hover .entry-actions { opacity: 1; }
 .entry-action-btn { background: transparent; border: none; color: var(--text-dim); padding: 0 0.75rem; font-size: 0.75rem; cursor: pointer; flex: 1; transition: all 0.15s; font-family: 'Noto Sans KR', sans-serif; }
@@ -154,7 +159,7 @@ body {
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding: 1rem; overflow-y: auto; }
 @media (min-width: 640px) { .modal-overlay { align-items: center; } }
-.modal { background: var(--bg); border: 1px solid var(--border); max-width: 36rem; width: 100%; padding: 1.5rem; margin: 2rem 0; }
+.modal { background: var(--bg); border: 1px solid var(--border); max-width: 46rem; width: 100%; padding: 1.5rem; margin: 2rem 0; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
 .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.875rem; }
 .modal-close { background: transparent; border: none; color: var(--text-dimmer); font-size: 1.5rem; cursor: pointer; line-height: 1; }
@@ -164,7 +169,7 @@ body {
 .field { margin-bottom: 1.25rem; }
 .field-label { display: block; font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.375rem; }
 .field input, .field textarea { width: 100%; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
-.field textarea { font-family: 'Noto Sans KR', sans-serif; resize: none; }
+.field textarea { font-family: 'Noto Sans KR', sans-serif; resize: vertical; min-height: 80px; }
 .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
 
 .type-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
@@ -500,12 +505,12 @@ body {
 
     <div class="field">
       <label class="field-label">오늘의 기술 / 핵심 포인트</label>
-      <textarea id="f-techniques" rows="3" placeholder="예: 잽-크로스-로우킥 콤보 / 더블레그 디펜스"></textarea>
+      <textarea id="f-techniques" rows="6" placeholder="예: 잽-크로스-로우킥 콤보 / 더블레그 디펜스"></textarea>
     </div>
 
     <div class="field">
       <label class="field-label">한줄 소감 / 다음에 고칠 것</label>
-      <textarea id="f-reflection" rows="2" placeholder="예: 라운드 후반 스텝 죽음. 호흡 리듬 다시 잡기."></textarea>
+      <textarea id="f-reflection" rows="4" placeholder="예: 라운드 후반 스텝 죽음. 호흡 리듬 다시 잡기."></textarea>
     </div>
 
     <div class="modal-actions">
@@ -1136,6 +1141,13 @@ function renderEntries() {
       roundsBits.push(t > 1 ? `그래플 ${t}타임 ${r}판` : `그래플 ${r}판`);
     }
     const roundsHtml = roundsBits.length ? `<span class="font-mono" style="font-size:0.75rem;color:var(--accent-bright)">· ${roundsBits.join(" · ")}</span>` : "";
+    const hasDetail = !!(entry.techniques || entry.reflection);
+    const detailHtml = hasDetail ? `
+        <span class="entry-toggle" data-id="${entry.id}">▼ 상세보기</span>
+        <div class="entry-detail" id="detail-${entry.id}">
+          ${entry.techniques ? `<p class="entry-tech">${escapeHtml(entry.techniques)}</p>` : ""}
+          ${entry.reflection ? `<p class="entry-reflection">— ${escapeHtml(entry.reflection)}</p>` : ""}
+        </div>` : "";
     return `<li class="entry">
       <div class="entry-date">
         <div class="entry-date-num">${d.getMonth()+1}.${String(d.getDate()).padStart(2,"0")}</div>
@@ -1149,12 +1161,11 @@ function renderEntries() {
           ${roundsHtml}
           ${entry.weight ? `<span class="font-mono" style="font-size:0.75rem;color:var(--text-dimmer)">· ${entry.weight}kg</span>` : ""}
           <div class="entry-stats">
-            <span>카디오 <span>${entry.cardio}</span>/10</span>
-            <span>컨디션 <span>${entry.condition}</span>/10</span>
+            <span>심폐 <span>${entry.cardio}</span>/10</span>
+            <span>회복 <span>${entry.condition}</span>/10</span>
           </div>
         </div>
-        ${entry.techniques ? `<p class="entry-tech">${escapeHtml(entry.techniques)}</p>` : ""}
-        ${entry.reflection ? `<p class="entry-reflection">— ${escapeHtml(entry.reflection)}</p>` : ""}
+        ${detailHtml}
       </div>
       <div class="entry-actions">
         <button class="entry-action-btn edit" data-id="${entry.id}">수정</button>
@@ -1165,6 +1176,13 @@ function renderEntries() {
 
   $$(".entry-action-btn.edit").forEach(btn => btn.addEventListener("click", () => openEdit(Number(btn.dataset.id))));
   $$(".entry-action-btn.delete").forEach(btn => btn.addEventListener("click", () => deleteEntry(Number(btn.dataset.id))));
+  $$(".entry-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const detail = $("#detail-" + btn.dataset.id);
+      const open = detail.classList.toggle("open");
+      btn.textContent = open ? "▲ 접기" : "▼ 상세보기";
+    });
+  });
 }
 
 function updateRoundsFields() {
