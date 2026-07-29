@@ -416,16 +416,7 @@ body {
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="detail-popup">
-  <div class="modal" style="max-width:46rem">
-    <div class="modal-header">
-      <h2 class="modal-title" id="detail-popup-title">상세 기록</h2>
-      <button class="modal-close" id="detail-popup-close">×</button>
-    </div>
-    <div id="detail-popup-body" style="font-size:0.95rem;line-height:1.7;white-space:pre-wrap;word-break:break-word"></div>
-    <div id="detail-popup-reflection" style="margin-top:1rem;font-size:0.9rem;color:var(--text-dim);font-style:italic;line-height:1.7;white-space:pre-wrap;word-break:break-word"></div>
-  </div>
-</div>
+<div class="modal-overlay hidden" id="modal">
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title">오늘의 훈련</h2>
@@ -529,6 +520,17 @@ body {
       <button class="btn-primary" id="save-btn">기록 저장</button>
       <button class="btn-ghost" id="cancel-btn">취소</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="detail-popup">
+  <div class="modal" style="max-width:46rem">
+    <div class="modal-header">
+      <h2 class="modal-title" id="detail-popup-title">상세 기록</h2>
+      <button class="modal-close" id="detail-popup-close">×</button>
+    </div>
+    <div id="detail-popup-body" style="font-size:0.95rem;line-height:1.7;white-space:pre-wrap;word-break:break-word"></div>
+    <div id="detail-popup-reflection" style="margin-top:1rem;font-size:0.9rem;color:var(--text-dim);font-style:italic;line-height:1.7;white-space:pre-wrap;word-break:break-word"></div>
   </div>
 </div>
 
@@ -1208,8 +1210,6 @@ function renderEntries() {
       }
     });
   });
-  $("#detail-popup-close").addEventListener("click", () => $("#detail-popup").classList.add("hidden"));
-  $("#detail-popup").addEventListener("click", (e) => { if (e.target === $("#detail-popup")) $("#detail-popup").classList.add("hidden"); });
 }
 
 function updateRoundsFields() {
@@ -1480,6 +1480,9 @@ $("#sync-clear-btn").addEventListener("click", () => {
 });
 
 if (syncEnabled()) syncNow(true);
+
+$("#detail-popup-close").addEventListener("click", () => $("#detail-popup").classList.add("hidden"));
+$("#detail-popup").addEventListener("click", (e) => { if (e.target === $("#detail-popup")) $("#detail-popup").classList.add("hidden"); });
 </script>
 </body>
 </html>
