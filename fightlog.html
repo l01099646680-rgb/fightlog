@@ -145,6 +145,9 @@ body {
 .entry-detail.open { max-height: 2000px; }
 .entry-toggle { font-size: 0.7rem; color: var(--text-dimmer); cursor: pointer; margin-top: 0.35rem; user-select: none; display: inline-block; }
 .entry-toggle:hover { color: var(--text); }
+@media (max-width: 639px) {
+  .entry-detail { display: none !important; }
+}
 .entry-actions { display: flex; flex-direction: column; border-left: 1px solid var(--border); opacity: 0; transition: opacity 0.15s; }
 .entry:hover .entry-actions { opacity: 1; }
 .entry-action-btn { background: transparent; border: none; color: var(--text-dim); padding: 0 0.75rem; font-size: 0.75rem; cursor: pointer; flex: 1; transition: all 0.15s; font-family: 'Noto Sans KR', sans-serif; }
@@ -413,7 +416,16 @@ body {
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modal">
+<div class="modal-overlay hidden" id="detail-popup">
+  <div class="modal" style="max-width:46rem">
+    <div class="modal-header">
+      <h2 class="modal-title" id="detail-popup-title">상세 기록</h2>
+      <button class="modal-close" id="detail-popup-close">×</button>
+    </div>
+    <div id="detail-popup-body" style="font-size:0.95rem;line-height:1.7;white-space:pre-wrap;word-break:break-word"></div>
+    <div id="detail-popup-reflection" style="margin-top:1rem;font-size:0.9rem;color:var(--text-dim);font-style:italic;line-height:1.7;white-space:pre-wrap;word-break:break-word"></div>
+  </div>
+</div>
   <div class="modal">
     <div class="modal-header">
       <h2 class="modal-title" id="modal-title">오늘의 훈련</h2>
@@ -1178,11 +1190,26 @@ function renderEntries() {
   $$(".entry-action-btn.delete").forEach(btn => btn.addEventListener("click", () => deleteEntry(Number(btn.dataset.id))));
   $$(".entry-toggle").forEach(btn => {
     btn.addEventListener("click", () => {
-      const detail = $("#detail-" + btn.dataset.id);
-      const open = detail.classList.toggle("open");
-      btn.textContent = open ? "▲ 접기" : "▼ 상세보기";
+      const isMobile = window.innerWidth < 640;
+      if (isMobile) {
+        const id = btn.dataset.id;
+        const entry = state.entries.find(e => String(e.id) === String(id));
+        if (!entry) return;
+        const d = new Date(entry.date + "T12:00:00");
+        const days = ["일","월","화","수","목","금","토"];
+        $("#detail-popup-title").textContent = `${d.getMonth()+1}.${String(d.getDate()).padStart(2,"0")} ${days[d.getDay()]}요일`;
+        $("#detail-popup-body").textContent = entry.techniques || "";
+        $("#detail-popup-reflection").textContent = entry.reflection ? `— ${entry.reflection}` : "";
+        $("#detail-popup").classList.remove("hidden");
+      } else {
+        const detail = $("#detail-" + btn.dataset.id);
+        const open = detail.classList.toggle("open");
+        btn.textContent = open ? "▲ 접기" : "▼ 상세보기";
+      }
     });
   });
+  $("#detail-popup-close").addEventListener("click", () => $("#detail-popup").classList.add("hidden"));
+  $("#detail-popup").addEventListener("click", (e) => { if (e.target === $("#detail-popup")) $("#detail-popup").classList.add("hidden"); });
 }
 
 function updateRoundsFields() {
