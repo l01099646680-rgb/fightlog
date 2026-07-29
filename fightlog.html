@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIGHT LOG · 격투기 훈련 일지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090b;
+  --bg-2: #18181b;
+  --border: #27272a;
+  --text: #f4f4f5;
+  --text-dim: #a1a1aa;
+  --text-dimmer: #71717a;
+  --accent: #dc2626;
+  --accent-bright: #ef4444;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 18px; }
+@media (min-width: 1280px) { html { font-size: 19px; } }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+.font-display { font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif; letter-spacing: 0.05em; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+.container { max-width: 88rem; margin: 0 auto; padding: 2rem 1rem; }
+@media (min-width: 640px) { .container { padding: 2rem 1.5rem; } }
+@media (min-width: 1280px) { .container { padding: 2.5rem 2.5rem; } }
+
+.header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.header-title { display: flex; align-items: center; gap: 0.75rem; }
+.header-bar { width: 6px; height: 2.5rem; background: var(--accent); }
+.header-title h1 { font-family: 'Bebas Neue', sans-serif; font-size: 3.25rem; letter-spacing: 0.05em; line-height: 1; }
+@media (min-width: 640px) { .header-title h1 { font-size: 3.75rem; } }
+.header-subtitle { color: var(--text-dim); margin-top: 0.5rem; margin-left: 1.25rem; font-size: 0.875rem; }
+
+.btn-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 0.75rem 1.5rem; font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.25rem; letter-spacing: 0.1em; cursor: pointer; transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--accent-bright); }
+.btn-ghost {
+  background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border); padding: 0.75rem 1.5rem;
+  cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s;
+}
+.btn-ghost:hover { color: var(--text); border-color: #52525b; }
+
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 2.5rem; }
+.stats > :nth-child(5) { grid-column: span 2; }
+@media (min-width: 768px) { .stats { grid-template-columns: repeat(5, 1fr); } .stats > :nth-child(5) { grid-column: auto; } }
+.stat-card { border: 1px solid var(--border); background: rgba(24,24,27,0.4); padding: 1rem; }
+.stat-card.accent { border-color: rgba(220,38,38,0.4); background: rgba(127,29,29,0.2); }
+.stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+.stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; margin-top: 0.5rem; display: flex; align-items: baseline; gap: 0.25rem; }
+.stat-card.accent .stat-value { color: var(--accent-bright); }
+.stat-suffix { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dimmer); }
+
+.monthly { margin-bottom: 2.5rem; }
+.monthly-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; user-select: none; }
+.monthly-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.05em; }
+.monthly-chevron { color: var(--text-dimmer); transition: transform 0.2s; font-size: 0.75rem; }
+.monthly.collapsed .monthly-chevron { transform: rotate(-90deg); }
+.monthly.collapsed .monthly-body { display: none; }
+.month-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+.month-card { border: 1px solid var(--border); background: rgba(24,24,27,0.3); padding: 1rem 1.25rem; }
+.month-card-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.875rem; }
+.month-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.03em; }
+.month-sessions { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-dim); }
+.month-metrics { display: flex; flex-wrap: wrap; gap: 1rem 2rem; }
+.month-metric-label { font-size: 0.7rem; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 0.05em; }
+.month-metric-value { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; margin-top: 0.125rem; color: var(--text); }
+.month-metric-value .unit { font-size: 0.7rem; color: var(--text-dimmer); }
+
+.view-toggle { display: inline-flex; border: 1px solid var(--border); margin-bottom: 1.5rem; }
+.view-btn { background: transparent; border: none; color: var(--text-dim); padding: 0.5rem 1.25rem; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-size: 0.875rem; transition: all 0.15s; }
+.view-btn.active { background: var(--text); color: var(--bg); }
+
+.calendar { margin-bottom: 1.5rem; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; max-width: 46rem; margin-left: auto; margin-right: auto; }
+.cal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.03em; }
+.cal-nav-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); width: 2.25rem; height: 2.25rem; cursor: pointer; font-size: 1.1rem; transition: all 0.15s; }
+.cal-nav-btn:hover { color: var(--text); border-color: #52525b; }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; margin-bottom: 0.25rem; max-width: 46rem; margin-left: auto; margin-right: auto; }
+.cal-weekdays span { text-align: center; font-size: 0.7rem; color: var(--text-dimmer); padding: 0.25rem 0; }
+.cal-sun { color: #f87171 !important; }
+.cal-sat { color: #60a5fa !important; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; max-width: 46rem; margin: 0 auto; }
+.cal-cell { aspect-ratio: 1; border: 1px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-dimmer); position: relative; }
+.cal-cell.has-entry { border-color: var(--border); background: rgba(24,24,27,0.6); cursor: pointer; color: var(--text); }
+.cal-cell.has-entry:hover { background: rgba(39,39,42,0.9); border-color: #52525b; }
+.cal-cell.today { border-color: var(--accent); }
+.cal-dots { display: flex; gap: 2px; position: absolute; bottom: 5px; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; margin-top: 1.25rem; justify-content: center; }
+.cal-legend-item { display: flex; align-items: center; gap: 0.375rem; font-size: 0.7rem; color: var(--text-dim); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+.filter-chip {
+  background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+  padding: 0.375rem 0.75rem; font-size: 0.875rem; cursor: pointer;
+  display: flex; align-items: center; gap: 0.5rem; transition: all 0.15s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.filter-chip:hover { color: var(--text); }
+.filter-chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.filter-dot { width: 0.5rem; height: 0.5rem; display: inline-block; }
+
+.entries { list-style: none; display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+@media (min-width: 1100px) { .entries { grid-template-columns: repeat(2, 1fr); } }
+.entry { border: 1px solid var(--border); background: rgba(24,24,27,0.3); display: flex; transition: background 0.15s; }
+.entry:hover { background: rgba(24,24,27,0.6); }
+.entry-date { width: 5rem; border-right: 1px solid var(--border); background: rgba(9,9,11,0.5); padding: 1rem; text-align: center; flex-shrink: 0; }
+@media (min-width: 640px) { .entry-date { width: 6rem; } }
+.entry-date-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.875rem; }
+.entry-date-day { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dimmer); margin-top: 0.25rem; }
+.entry-content { flex: 1; padding: 1rem; min-width: 0; }
+.entry-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.type-badge { color: white; font-size: 0.75rem; padding: 0.125rem 0.5rem; }
+.entry-stats { margin-left: auto; display: flex; gap: 0.75rem; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: var(--text-dim); }
+.entry-stats span span { color: var(--text); }
+.entry-tech, .entry-reflection { font-size: 0.875rem; word-break: break-word; white-space: pre-wrap; }
+.entry-tech { color: #e4e4e7; margin-bottom: 0.375rem; }
+.entry-reflection { color: var(--text-dim); font-style: italic; }
+.entry-actions { display: flex; flex-direction: column; border-left: 1px solid var(--border); opacity: 0; transition: opacity 0.15s; }
+.entry:hover .entry-actions { opacity: 1; }
+.entry-action-btn { background: transparent; border: none; color: var(--text-dim); padding: 0 0.75rem; font-size: 0.75rem; cursor: pointer; flex: 1; transition: all 0.15s; font-family: 'Noto Sans KR', sans-serif; }
+.entry-action-btn:hover { background: #27272a; color: var(--text); }
+.entry-action-btn.delete { border-top: 1px solid var(--border); }
+.entry-action-btn.delete:hover { background: #450a0a; color: #f87171; }
+@media (max-width: 640px) { .entry-actions { opacity: 1; } }
+
+.empty { border: 1px dashed var(--border); padding: 3rem 1rem; text-align: center; }
+.empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.875rem; color: var(--text-dimmer); margin-bottom: 0.5rem; }
+.empty-text { font-size: 0.875rem; color: var(--text-dim); margin-bottom: 1.5rem; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding: 1rem; overflow-y: auto; }
+@media (min-width: 640px) { .modal-overlay { align-items: center; } }
+.modal { background: var(--bg); border: 1px solid var(--border); max-width: 36rem; width: 100%; padding: 1.5rem; margin: 2rem 0; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.875rem; }
+.modal-close { background: transparent; border: none; color: var(--text-dimmer); font-size: 1.5rem; cursor: pointer; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
+.field { margin-bottom: 1.25rem; }
+.field-label { display: block; font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.375rem; }
+.field input, .field textarea { width: 100%; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+.field textarea { font-family: 'Noto Sans KR', sans-serif; resize: none; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+
+.type-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+@media (max-width: 480px) { .type-grid { grid-template-columns: repeat(3, 1fr); } }
+.type-btn { background: var(--bg-2); border: 1px solid var(--border); color: var(--text-dim); padding: 0.5rem 0.25rem; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; font-family: 'Noto Sans KR', sans-serif; word-break: keep-all; line-height: 1.2; }
+.type-btn:hover { color: var(--text); }
+.type-btn.active { color: white; border-color: transparent; }
+
+.slider-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+.slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.375rem; }
+.slider-value { font-family: 'JetBrains Mono', monospace; }
+.slider-value-num { font-size: 1.5rem; }
+.slider-value-suffix { color: var(--text-dimmer); font-size: 0.75rem; }
+.field input[type="range"] { width: 100%; accent-color: var(--accent); background: transparent; border: none; padding: 0; }
+.slider-hint { font-size: 0.75rem; color: var(--text-dimmer); margin-top: 0.25rem; }
+.slider-ends { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-dimmer); margin-top: 0.375rem; font-family: 'Noto Sans KR', sans-serif; }
+.slider-ends .end-low { color: #71717a; }
+.slider-ends .end-high { color: #a1a1aa; }
+.modal-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+.modal-actions .btn-primary { flex: 1; }
+
+.hidden { display: none !important; }
+
+.footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid #18181b; color: var(--text-dimmer); font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.footer-actions { display: flex; gap: 0.75rem; }
+.footer-link { background: transparent; border: none; color: var(--text-dimmer); cursor: pointer; font-size: 0.75rem; text-decoration: underline; font-family: 'Noto Sans KR', sans-serif; }
+.footer-link:hover { color: var(--text-dim); }
+
+.type-technique { background: #3f3f46; }
+.type-mma-sparring { background: #dc2626; }
+.type-grappling { background: #4338ca; }
+.type-conditioning { background: #d97706; }
+.type-flexibility { background: #047857; }
+.class-strike { background: #ea580c; }
+.class-grap { background: #2563eb; }
+.class-mma { background: #7c3aed; }
+.class-sparring { background: #dc2626; }
+.mode-full { background: #b91c1c; }
+.mode-situational { background: #57534e; }
+
+.sync-status { margin-top: 0.6rem; font-size: 0.75rem; color: var(--text-dimmer); text-align: right; min-height: 1rem; }
+.sync-status.ok { color: #4ade80; }
+.sync-status.err { color: #f87171; }
+.sync-status.busy { color: var(--accent-bright); }
+.sync-panel { margin-top: 0.75rem; border: 1px solid var(--border); padding: 1.1rem 1rem; background: rgba(24,24,27,0.4); }
+.sync-panel.hidden { display: none; }
+.sync-panel-actions { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; }
+.sync-hint { margin-top: 0.75rem; font-size: 0.72rem; color: var(--text-dimmer); line-height: 1.5; }
+.class-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+@media (max-width: 480px) { .class-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.fortune-card { border: 1px solid var(--border); background: rgba(24,24,27,0.4); margin-bottom: 1.5rem; position: relative; overflow: hidden; }
+.fortune-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--accent); }
+.fortune-head { display:flex; align-items:center; justify-content:space-between; padding: 1rem 1.25rem; border-bottom: 1px dashed var(--border); }
+.fortune-label { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dimmer); }
+.fortune-catbadge { display:flex; align-items:center; gap: 0.5rem; }
+.fortune-code { font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.08em; background: var(--accent); color:#fff; padding: 0.15rem 0.5rem; }
+.fortune-kr { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+.fortune-body { padding: 1.5rem 1.25rem 1.25rem; }
+.fortune-eyebrow { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-bright); margin-bottom: 0.5rem; }
+.fortune-move { font-family:'Bebas Neue',sans-serif; font-size: clamp(2rem, 6vw, 3rem); letter-spacing: 0.03em; line-height: 1; color: var(--text); }
+.fortune-focus { margin-top: 0.75rem; font-size: 0.95rem; line-height: 1.55; color: var(--text-dim); }
+.fortune-focus b { color: var(--text); }
+.fortune-watchbox { margin-top: 1.1rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-left: 3px solid #d97706; padding: 0.85rem 1rem; }
+.fortune-wt { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: #d97706; margin-bottom: 0.35rem; }
+.fortune-wc { font-size: 0.9rem; color: var(--text); line-height: 1.5; }
+.fortune-actions { display:flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.35rem; }
+.fortune-actions .btn-primary, .fortune-actions .btn-ghost { padding: 0.65rem 1.1rem; font-size: 0.85rem; letter-spacing: 0.02em; }
+.fortune-cats { display:flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+.fortune-stats-row { display:grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+.fortune-log { border: 1px solid var(--border); }
+.fortune-log-row { display:flex; flex-direction:column; gap: 0.2rem; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); font-size: 0.8rem; cursor: pointer; transition: background 0.12s; }
+.fortune-log-row:hover { background: rgba(39,39,42,0.6); }
+.fortune-log-row:last-child { border-bottom: none; }
+.fortune-log-row .fl-top { display:flex; align-items:center; gap: 0.75rem; }
+.fortune-log-row .fl-date { font-family:'JetBrains Mono',monospace; color: var(--text-dimmer); width: 3.2rem; flex-shrink:0; }
+.fortune-log-row .fl-code { font-family:'JetBrains Mono',monospace; font-size: 0.7rem; color: var(--accent-bright); width: 2.2rem; flex-shrink:0; }
+.fortune-log-row .fl-name { color: var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fortune-log-row .fl-link { margin-left: 3.2rem; font-size: 0.75rem; }
+.fortune-log-row .fl-link a { color: var(--accent-bright); text-decoration: none; }
+.fortune-log-row .fl-link a:hover { text-decoration: underline; }
+.fortune-log-row .fl-memo { margin-left: 3.2rem; font-size: 0.75rem; color: var(--text-dim); font-style: italic; white-space: pre-wrap; }
+
+.field select { width:100%; background: var(--bg-2); border:1px solid var(--border); color: var(--text); padding: 0.5rem 0.75rem; font-family:'Noto Sans KR',sans-serif; font-size: 0.9rem; }
+.fortune-backfill { margin-top: 1rem; border: 1px solid var(--border); }
+.fortune-backfill-toggle { display:flex; align-items:center; justify-content:space-between; padding: 0.85rem 1rem; cursor:pointer; user-select:none; font-size:0.85rem; color: var(--text-dim); }
+.fortune-backfill-toggle:hover { color: var(--text); }
+.fortune-backfill-body { padding: 0 1rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1.1rem; }
+.fortune-backfill-body.hidden { display:none; }
+#f-backfill-chevron.open { transform: rotate(180deg); }
+.fortune-log-empty { padding: 1.25rem 1rem; text-align:center; color: var(--text-dimmer); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div>
+      <div class="header-title">
+        <div class="header-bar"></div>
+        <h1>FIGHT LOG</h1>
+      </div>
+      <p class="header-subtitle">단어알지? 싸워! 매일 도장 나가서 매 순간순간순간마다 싸워! 난 그거 여러분 볼거야!</p>
+    </div>
+    <button class="btn-primary" id="add-btn">+ 오늘 기록</button>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="monthly" id="monthly" style="display:none">
+    <div class="monthly-header" id="monthly-toggle">
+      <h2>월별 추이</h2>
+      <span class="monthly-chevron">▼</span>
+    </div>
+    <div class="monthly-body" id="monthly-body"></div>
+  </section>
+
+  <div class="view-toggle">
+    <button class="view-btn active" data-view="list">리스트</button>
+    <button class="view-btn" data-view="calendar">달력</button>
+    <button class="view-btn" data-view="fortune">오늘의 수련</button>
+  </div>
+
+  <div class="calendar" id="calendar" style="display:none">
+    <div class="cal-header">
+      <button class="cal-nav-btn" id="cal-prev">‹</button>
+      <span class="cal-title" id="cal-title"></span>
+      <button class="cal-nav-btn" id="cal-next">›</button>
+    </div>
+    <div class="cal-weekdays">
+      <span class="cal-sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="cal-sat">토</span>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-legend" id="cal-legend"></div>
+  </div>
+
+  <div class="fortune-view" id="fortune-view" style="display:none">
+    <div class="fortune-card">
+      <div class="fortune-head">
+        <span class="fortune-label">오늘의 상대</span>
+        <span class="fortune-catbadge"><span class="fortune-code" id="f-cat-code">—</span><span class="fortune-kr" id="f-cat-kr">—</span></span>
+      </div>
+      <div class="fortune-body">
+        <div class="fortune-eyebrow">집에서 영상 보고 배울 것</div>
+        <div class="fortune-move" id="f-move-name">—</div>
+        <div class="fortune-focus" id="f-move-focus">—</div>
+        <div class="fortune-watchbox">
+          <div class="fortune-wt">영상에서 이걸 보세요</div>
+          <div class="fortune-wc" id="f-move-watch">—</div>
+        </div>
+        <div class="field" style="margin-top:1.1rem;">
+          <label class="field-label">영상 링크 (선택)</label>
+          <input type="text" id="f-link" placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">복습 메모 (선택)</label>
+          <textarea id="f-memo" rows="2" placeholder="이 영상에서 배운 포인트, 다음에 확인할 것 등"></textarea>
+        </div>
+        <div class="fortune-actions">
+          <button class="btn-primary" id="f-btn-kr">한국어 영상 찾기</button>
+          <button class="btn-ghost" id="f-btn-en">해외 영상 찾기</button>
+          <button class="btn-ghost" id="f-btn-done">오늘 수련 완료</button>
+          <button class="btn-ghost" id="f-btn-log">기록만 남기기 (복습)</button>
+          <button class="btn-ghost" id="f-btn-reroll">다시 뽑기</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="fortune-cats" id="fortune-cats"></div>
+
+    <div class="fortune-stats-row">
+      <div class="stat-card"><div class="stat-label">총 완료</div><div class="stat-value" id="f-stat-total">0</div></div>
+      <div class="stat-card accent"><div class="stat-label">연속 일수</div><div class="stat-value" id="f-stat-streak">0</div></div>
+    </div>
+    <div class="fortune-log" id="fortune-log"></div>
+
+    <div class="fortune-backfill">
+      <div class="fortune-backfill-toggle" id="f-backfill-toggle">
+        <span id="f-backfill-label">+ 지난 기록 추가</span>
+        <span class="monthly-chevron" id="f-backfill-chevron">▼</span>
+      </div>
+      <div class="fortune-backfill-body hidden" id="f-backfill-body">
+        <div class="form-row">
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label">날짜</label>
+            <input type="date" id="fb-date">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label">파트</label>
+            <select id="fb-cat"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">기술</label>
+          <select id="fb-move"></select>
+        </div>
+        <div class="field">
+          <label class="field-label">영상 링크 (선택)</label>
+          <input type="text" id="fb-link" placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="field" style="margin-bottom:0.75rem">
+          <label class="field-label">복습 메모 (선택)</label>
+          <textarea id="fb-memo" rows="2" placeholder="배운 포인트, 다음에 확인할 것 등"></textarea>
+        </div>
+        <button class="btn-primary" id="fb-save" style="width:100%">이 날짜로 기록 저장</button>
+        <button class="btn-ghost hidden" id="fb-delete" style="width:100%;margin-top:0.5rem;color:#f87171;border-color:#7f1d1d">이 기록 삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters" id="class-filters"></div>
+  <div class="filters" id="filters"></div>
+  <div id="content"></div>
+
+  <footer class="footer">
+    <span>기록은 이 브라우저에 저장됩니다 · <span id="entry-count">0</span>개</span>
+    <div class="footer-actions">
+      <button class="footer-link" id="sync-btn">동기화</button>
+      <button class="footer-link" id="sync-cfg-btn">동기화 설정</button>
+      <button class="footer-link" id="export-btn">백업 내보내기</button>
+      <button class="footer-link" id="import-btn">백업 가져오기</button>
+      <input type="file" id="import-file" accept=".json" style="display:none">
+    </div>
+  </footer>
+
+  <div class="sync-status" id="sync-status"></div>
+
+  <div class="sync-panel hidden" id="sync-panel">
+    <div class="field">
+      <label class="field-label">Worker 주소</label>
+      <input type="text" id="sync-url" placeholder="https://xxxx.workers.dev">
+    </div>
+    <div class="field">
+      <label class="field-label">인증 토큰 (AUTH_TOKEN)</label>
+      <input type="password" id="sync-token" placeholder="Worker에 설정한 값">
+    </div>
+    <div class="sync-panel-actions">
+      <button class="btn-primary" id="sync-save-btn">저장하고 동기화</button>
+      <button class="btn-ghost" id="sync-clear-btn">연결 해제</button>
+    </div>
+    <p class="sync-hint">이 값은 이 브라우저에만 저장됩니다. 폰·PC 양쪽에 같은 값을 넣으면 기록이 자동으로 오갑니다.</p>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">오늘의 훈련</h2>
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+
+    <div class="form-row">
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">날짜</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">시간 (분)</label>
+        <input type="number" id="f-duration" min="0">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">수업 (선택)</label>
+      <div class="class-grid" id="class-grid"></div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">훈련 유형 (복수 선택)</label>
+      <div class="type-grid" id="type-grid"></div>
+    </div>
+
+    <div class="form-row" id="mma-rounds-field" style="display:none">
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">MMA — 타임</label>
+        <input type="number" id="f-mma-sessions" min="0" placeholder="예: 2">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">MMA — 총 판수</label>
+        <input type="number" id="f-mma-rounds" min="0" placeholder="예: 12">
+      </div>
+    </div>
+
+    <div class="field" id="mma-focus-field" style="display:none">
+      <label class="field-label">MMA 스파링 포커스 (선택)</label>
+      <div class="class-grid" id="mma-focus-grid" style="grid-template-columns:repeat(3,1fr)"></div>
+    </div>
+
+    <div class="field" id="sparring-mode-field" style="display:none">
+      <label class="field-label">스파링 강도 (선택)</label>
+      <div class="class-grid" id="sparring-mode-grid" style="grid-template-columns:repeat(2,1fr)"></div>
+    </div>
+
+    <div class="form-row" id="grappling-rounds-field" style="display:none">
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">레슬링/주짓수 — 타임</label>
+        <input type="number" id="f-grappling-sessions" min="0" placeholder="예: 1">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">레슬링/주짓수 — 총 판수</label>
+        <input type="number" id="f-grappling-rounds" min="0" placeholder="예: 5">
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="field" style="margin-bottom:0">
+        <div class="slider-header">
+          <label class="field-label" style="margin-bottom:0">심폐 강도</label>
+          <div class="slider-value">
+            <span class="slider-value-num" id="cardio-display">6</span>
+            <span class="slider-value-suffix"> /10</span>
+          </div>
+        </div>
+        <input type="range" id="f-cardio" min="1" max="10" value="6">
+        <div class="slider-ends"><span class="end-low">1 · 한점 안 쌈</span><span class="end-high">숨 차감 · 10</span></div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <div class="slider-header">
+          <label class="field-label" style="margin-bottom:0">신체 회복도</label>
+          <div class="slider-value">
+            <span class="slider-value-num" id="condition-display">7</span>
+            <span class="slider-value-suffix"> /10</span>
+          </div>
+        </div>
+        <input type="range" id="f-condition" min="1" max="10" value="7">
+        <div class="slider-ends"><span class="end-low">1 · 완전히 지침</span><span class="end-high">완전히 회복 · 10</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">체중 (kg, 선택)</label>
+      <input type="number" id="f-weight" step="0.1" placeholder="80.0">
+    </div>
+
+    <div class="field">
+      <label class="field-label">오늘의 기술 / 핵심 포인트</label>
+      <textarea id="f-techniques" rows="3" placeholder="예: 잽-크로스-로우킥 콤보 / 더블레그 디펜스"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="field-label">한줄 소감 / 다음에 고칠 것</label>
+      <textarea id="f-reflection" rows="2" placeholder="예: 라운드 후반 스텝 죽음. 호흡 리듬 다시 잡기."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" id="save-btn">기록 저장</button>
+      <button class="btn-ghost" id="cancel-btn">취소</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "mma:entries:v1";
+const TRAINING_TYPES = [
+  { id: "technique", label: "기술훈련", color: "type-technique" },
+  { id: "mma_sparring", label: "MMA 스파링", color: "type-mma-sparring" },
+  { id: "grappling", label: "레슬링/주짓수 스파링", color: "type-grappling" },
+  { id: "conditioning", label: "컨디셔닝", color: "type-conditioning" },
+  { id: "flexibility", label: "유연성", color: "type-flexibility" }
+];
+
+const CLASS_TYPES = [
+  { id: "strike", label: "타격", color: "class-strike" },
+  { id: "grap", label: "레슬링/주짓수", color: "class-grap" },
+  { id: "mma", label: "MMA", color: "class-mma" },
+  { id: "sparring", label: "스파링데이", color: "class-sparring" }
+];
+
+const MMA_FOCUS = [
+  { id: "striking", label: "타격위주", color: "class-strike" },
+  { id: "mma", label: "종합(MMA)", color: "class-mma" },
+  { id: "grap", label: "레슬링위주", color: "class-grap" }
+];
+
+const SPARRING_MODE = [
+  { id: "full", label: "풀스파링", color: "mode-full" },
+  { id: "situational", label: "상황스파링", color: "mode-situational" }
+];
+
+const state = { entries: [], filter: "all", classFilter: "all", editingId: null, formTypes: ["technique"], formClass: null, formMmaFocus: null, formSparringMode: null, view: "list" };
+let calMonth = new Date();
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+/* ===== 오늘의 수련 (fortune draw) ===== */
+const FORTUNE_KEY = "mma:fortune:v1";
+const F_CATS = { STR:{kr:"타격", type:"technique"}, WRE:{kr:"레슬링·테이크다운", type:"grappling"}, BJJ:{kr:"주짓수·그래플링", type:"grappling"}, CLI:{kr:"클린치", type:"technique"}, FLE:{kr:"유연성", type:"flexibility"}, ANA:{kr:"선수분석", type:"technique"} };
+const F_POOL = [
+  {cat:"STR",name:"잽 기본기",focus:"어깨로 미는 게 아니라 <b>체중 이동</b>으로 뻗는 잽.",watch:"리드 발 스텝과 잽이 동시에 나가는 타이밍, 그리고 친 손이 곧바로 턱으로 돌아오는지.",yt:"boxing jab fundamentals technique",ytkr:"복싱 잽 기본기"},
+  {cat:"STR",name:"원-투 크로스",focus:"뒷손 크로스의 <b>파워는 힙 회전</b>에서 나온다.",watch:"뒷발 뒤꿈치가 피벗되며 힙이 돌아가는지, 상체만 휘두르지 않는지.",yt:"one two cross rotation power boxing",ytkr:"원투 크로스 복싱 힙회전"},
+  {cat:"STR",name:"로우킥 셋업",focus:"때리기 전에 <b>손으로 시선을 뺏는</b> 셋업이 핵심.",watch:"정강이로 치는지(발등 아님), 딛는 발이 살짝 열리며 힙이 도는지.",yt:"muay thai low kick setup technique",ytkr:"로우킥 기본기 무에타이"},
+  {cat:"STR",name:"카프킥",focus:"종아리 안쪽을 노리는 <b>낮은 킥</b>, 누적 데미지가 크다.",watch:"타격 각도와 스텝 인 타이밍, 상대 무게가 실린 다리를 치는지.",yt:"calf kick mma technique breakdown",ytkr:"카프킥 종아리킥 mma"},
+  {cat:"STR",name:"티프킥(푸시킥)",focus:"거리 유지·리듬 끊기용 <b>앞차기</b>.",watch:"무릎을 먼저 들어올린 뒤 밀어내는 순서, 뒤로 밀려나며 반격 안 당하는지.",yt:"teep push kick distance control muay thai",ytkr:"티프킥 푸시킥 무에타이"},
+  {cat:"STR",name:"하이킥 셋업",focus:"로우·바디로 <b>가드를 내린 뒤</b> 위로 올리는 콤보.",watch:"딛는 발의 회전과 힙 오픈, 상체가 뒤로 젖혀지며 킥이 올라가는지.",yt:"head kick setup combination mma",ytkr:"하이킥 기본기 콤비네이션"},
+  {cat:"STR",name:"슬립 & 카운터",focus:"상대 잽을 <b>살짝 흘리며</b> 동시에 크로스.",watch:"머리를 얼마나 작게 움직이는지, 슬립과 카운터가 한 박자로 나가는지.",yt:"slip counter boxing head movement",ytkr:"슬립 카운터 헤드무브먼트 복싱"},
+  {cat:"STR",name:"리드 훅",focus:"앞손 훅은 <b>팔꿈치 90도</b>를 유지한 회전 타격.",watch:"팔로 휘두르지 않고 발·힙 회전으로 미는지, 가드가 열리지 않는지.",yt:"lead hook technique boxing",ytkr:"리드훅 복싱 기본기"},
+  {cat:"STR",name:"바디샷(간 공략)",focus:"레벨을 낮춰 <b>리버(간)</b>를 노리는 훅.",watch:"무릎 굽혀 레벨 체인지하는지, 셋업으로 상대 손을 위로 유도하는지.",yt:"liver shot body punch setup boxing",ytkr:"바디샷 간타격 복싱"},
+  {cat:"STR",name:"로우킥 체크",focus:"무릎 들어 <b>정강이로 막는</b> 방어.",watch:"체크하며 밸런스 유지하는지, 막은 직후 바로 반격으로 넘어가는지.",yt:"how to check low kicks muay thai",ytkr:"로우킥 체크 방어 무에타이"},
+  {cat:"WRE",name:"더블레그 진입",focus:"<b>레벨 체인지 → 페네트레이션 스텝</b>이 생명.",watch:"앞무릎을 슬라이드하며 들어가는지, 머리가 상대 가슴 옆에 붙는지.",yt:"double leg takedown penetration step drill",ytkr:"더블렉 테이크다운 레슬링"},
+  {cat:"WRE",name:"인사이드 싱글레그",focus:"안쪽 다리를 잡고 <b>코너링</b>으로 넘긴다.",watch:"그립 종류와 머리 위치(안쪽), 상대 균형을 어느 방향으로 무너뜨리는지.",yt:"inside single leg takedown mma",ytkr:"싱글렉 테이크다운 레슬링"},
+  {cat:"WRE",name:"스프롤",focus:"테이크다운 방어의 기본, <b>엉덩이를 뒤로</b>.",watch:"다리를 뒤로 빼며 체중을 상대 등에 싣는지, 크로스페이스로 눌러 컨트롤하는지.",yt:"sprawl takedown defense drill wrestling",ytkr:"스프롤 테이크다운 방어 레슬링"},
+  {cat:"WRE",name:"하이 크로치",focus:"<b>언더훅을 잡고</b> 다리 사이로 진입.",watch:"언더훅으로 상체를 컨트롤하며 들어가는 각도, 상대를 세워 무너뜨리는지.",yt:"high crotch wrestling technique",ytkr:"하이크로치 레슬링 테이크다운"},
+  {cat:"WRE",name:"케이지(벽) 레슬링",focus:"MMA 특화 — <b>벽에 붙여</b> 각도를 만든다.",watch:"언더훅으로 벽에 고정하는 발 위치, 상대 체중을 벽으로 흘려 테이크다운 만드는지.",yt:"cage wrestling mma wall takedown",ytkr:"케이지 레슬링 벽 테이크다운"},
+  {cat:"WRE",name:"리액티브 더블",focus:"상대가 밀 때 <b>그 힘을 이용</b>해 인.",watch:"미는 압력을 감지하는 타이밍, 저항 없이 자연스럽게 레벨 체인지로 이어지는지.",yt:"reactive double leg wrestling",ytkr:"리액티브 더블렉 레슬링"},
+  {cat:"WRE",name:"암드래그",focus:"팔을 당겨 <b>등을 노출</b>시키고 앵글.",watch:"손목·팔꿈치 그립 위치, 당긴 직후 즉시 사이드로 도는지.",yt:"arm drag to back wrestling technique",ytkr:"암드래그 레슬링 백테이크"},
+  {cat:"WRE",name:"테이크다운 후 컨트롤",focus:"넘긴 <b>직후 1초</b>가 포지션을 결정.",watch:"다리를 컨트롤하며 상체로 눌러 일어나지 못하게 하는지, 스크램블 대비하는지.",yt:"takedown to control top position mma",ytkr:"테이크다운 탑포지션 컨트롤 mma"},
+  {cat:"BJJ",name:"클로즈드 가드",focus:"발목만 걸지 말고 <b>힙으로 컨트롤</b>.",watch:"상대 자세를 무너뜨리는 방법, 다리와 팔로 동시에 각도를 만드는지.",yt:"closed guard fundamentals bjj",ytkr:"클로즈드가드 기본기 주짓수"},
+  {cat:"BJJ",name:"트라이앵글 초크",focus:"<b>한 팔 안, 한 팔 밖</b> 상황을 만든다.",watch:"다리 각도와 상대 자세 컨트롤, 조이기 전에 각도를 90도로 트는지.",yt:"triangle choke setup from guard bjj",ytkr:"트라이앵글 초크 주짓수"},
+  {cat:"BJJ",name:"암바(가드)",focus:"팔을 <b>고립</b>시키고 힙으로 각도.",watch:"상대 팔을 가슴에 붙여 고립하는지, 힙을 들어 다리 무게로 압박하는지.",yt:"armbar from closed guard bjj",ytkr:"암바 가드 주짓수 기본기"},
+  {cat:"BJJ",name:"힙범프 스윕",focus:"한 손 포스팅 후 <b>힙을 폭발적으로</b>.",watch:"포스팅한 손 위치, 상대 밸런스가 뜬 순간을 노리는 타이밍.",yt:"hip bump sweep bjj",ytkr:"힙범프 스윕 주짓수"},
+  {cat:"BJJ",name:"마운트 유지",focus:"공격보다 <b>안 뺏기는 게</b> 먼저.",watch:"무릎을 조이고 발을 후킹하는지, 상대 힙 무빙을 손·체중으로 막는지.",yt:"how to maintain mount position bjj",ytkr:"마운트 포지션 유지 주짓수"},
+  {cat:"BJJ",name:"백 컨트롤 & RNC",focus:"훅 두 개 + <b>시트벨트 그립</b>.",watch:"초크 손이 목 밑으로 들어가는 각도, 상대가 도는 걸 훅으로 따라가는지.",yt:"back control rear naked choke details bjj",ytkr:"백컨트롤 리어네이키드초크 주짓수"},
+  {cat:"BJJ",name:"기무라",focus:"손목 그립과 <b>팔 각도</b>가 전부.",watch:"상대 손목을 잡는 그립, 몸통 회전으로 압박을 주는지(팔 힘 아님).",yt:"kimura lock technique bjj",ytkr:"기무라 서브미션 주짓수"},
+  {cat:"BJJ",name:"가드 리텐션",focus:"패스당하기 전에 <b>힙·프레임</b>으로 회복.",watch:"프레임을 어디에 대는지, 힙 무빙으로 다리를 다시 넣는 리커버리 동작.",yt:"guard retention fundamentals bjj",ytkr:"가드 리텐션 주짓수 기본기"},
+  {cat:"BJJ",name:"토레안도 패스",focus:"상대 다리를 밀고 <b>옆으로 도는</b> 패스.",watch:"다리를 미는 그립과 도는 타이밍, 사이드로 붙는 순간의 압박.",yt:"toreando guard pass bjj",ytkr:"토레안도 패스 주짓수"},
+  {cat:"BJJ",name:"하프가드 언더훅",focus:"밑에서 <b>언더훅</b>으로 백·스윕.",watch:"언더훅을 잡고 옆으로 빠져나오는 동작, 백을 딸지 스윕할지 갈림길.",yt:"half guard underhook sweep to back bjj",ytkr:"하프가드 언더훅 주짓수"},
+  {cat:"CLI",name:"더블 컬러타이(플럼)",focus:"무에타이 클린치 — <b>목 뒤 손</b>과 팔꿈치.",watch:"양손을 목 뒤에 겹치는 위치, 팔꿈치를 조여 상대 자세를 무너뜨리는지.",yt:"muay thai clinch double collar tie plum",ytkr:"무에타이 클린치 더블컬러타이"},
+  {cat:"CLI",name:"클린치 니",focus:"목을 <b>당기며</b> 무릎을 올린다.",watch:"당기는 힘과 무릎이 반대로 만나는 타이밍, 힙을 밀어 파워 주는지.",yt:"clinch knee muay thai technique",ytkr:"클린치 니 니킥 무에타이"},
+  {cat:"CLI",name:"언더훅 피벗",focus:"언더훅으로 <b>각도를 만들어</b> 등지게.",watch:"언더훅을 깊게 잡는지, 피벗하며 상대를 벽·케이지로 모는지.",yt:"underhook clinch pivot mma",ytkr:"언더훅 클린치 피벗 mma"},
+  {cat:"CLI",name:"클린치 브레이크",focus:"<b>맞기 전에</b> 프레임 만들고 빠져나오기.",watch:"프레임을 대고 미는 순간 스텝 백하는지, 빠지며 반격 한 방 넣는지.",yt:"how to break the clinch and exit mma",ytkr:"클린치 브레이크 빠져나오기 mma"},
+  {cat:"FLE",name:"힙 모빌리티",focus:"하이킥·가드의 <b>고관절</b> 가동성.",watch:"90/90 자세 전환, 고관절을 안팎으로 도는 범위를 늘리는 드릴.",yt:"hip mobility routine for high kicks",ytkr:"고관절 모빌리티 하이킥 스트레칭"},
+  {cat:"FLE",name:"어깨 가동성",focus:"가드·그래플링용 <b>어깨</b> 스트레치.",watch:"어깨를 무리하지 않고 여는 동작, 회전근개 워밍업 포함하는지.",yt:"shoulder mobility routine bjj grappling",ytkr:"어깨 가동성 스트레칭 주짓수"},
+  {cat:"FLE",name:"발목 도르시플렉션",focus:"스쿼트·테이크다운용 <b>발목</b> 유연성.",watch:"무릎을 발끝 너머로 보내는 드릴, 좌우 차이를 체크하는지.",yt:"ankle dorsiflexion mobility drills",ytkr:"발목 가동성 스트레칭 운동"},
+  {cat:"FLE",name:"흉추 회전",focus:"펀치 파워·가드용 <b>등 회전성</b>.",watch:"허리가 아닌 흉추에서 도는지, 골반은 고정하고 상체만 회전하는지.",yt:"thoracic spine rotation mobility drill",ytkr:"흉추 회전 스트레칭 모빌리티"},
+  {cat:"FLE",name:"폼롤링 회복",focus:"훈련 후 <b>액티브 리커버리</b>.",watch:"다리·등 주요 부위를 천천히 이완하는지, 통증 지점에서 멈춰 호흡하는지.",yt:"foam rolling recovery routine full body",ytkr:"폼롤러 마사지 전신 회복"},
+
+  // ---- ANA 선수분석 ----
+  {cat:"ANA",name:"스탠스·풋워크 분석",focus:"상위 타격가들의 <b>스탠스 전환</b>과 각도 만들기.",watch:"발이 먼저 움직이는지 손이 먼저인지, 어떻게 상대 정면을 피해 각을 만드는지.",yt:"mma footwork breakdown analysis",ytkr:"MMA 풋워크 분석 영상"},
+  {cat:"ANA",name:"케이지 컨트롤 분석",focus:"옥타곤 중앙을 장악하고 <b>상대를 벽으로 모는</b> 방법.",watch:"압박하는 선수의 스텝 패턴, 상대를 케이지로 미는 각도.",yt:"cage control breakdown mma",ytkr:"케이지 컨트롤 분석 mma"},
+  {cat:"ANA",name:"프레셔 레슬링 분석",focus:"지속적인 압박으로 상대를 <b>지치게 만드는</b> 게임플랜.",watch:"테이크다운 시도 빈도와 타이밍, 클린치에서 상대 체력을 갉아먹는 방식.",yt:"pressure wrestling mma breakdown",ytkr:"프레셔 레슬링 분석 mma"},
+  {cat:"ANA",name:"카운터 스트라이킹 분석",focus:"먼저 치지 않고 <b>상대 공격을 받아치는</b> 타이밍.",watch:"백풋에서 어떻게 유인하고, 반격이 나가는 타이밍이 얼마나 빠른지.",yt:"counter striking breakdown mma",ytkr:"카운터 스트라이커 분석 mma"},
+  {cat:"ANA",name:"서브미션 체이닝 분석",focus:"기술이 안 먹힐 때 <b>다음 기술로 자연스럽게</b> 넘어가는 흐름.",watch:"실패한 시도가 어떻게 다음 공격의 셋업이 되는지.",yt:"submission chaining breakdown bjj",ytkr:"서브미션 체이닝 분석 주짓수"},
+  {cat:"ANA",name:"매치업별 게임플랜 분석",focus:"상대 스타일에 맞춰 <b>전략을 바꾸는</b> 선수들의 사고 흐름.",watch:"라운드가 지날수록 전략이 어떻게 조정되는지.",yt:"mma game plan analysis breakdown",ytkr:"MMA 게임플랜 분석"},
+  {cat:"ANA",name:"클린치 워크 분석",focus:"스탠딩 클린치에서 <b>데미지를 누적</b>시키는 방법.",watch:"손 위치 전환과 무릎 타이밍, 상대를 어떻게 벽에 고정하는지.",yt:"clinch work breakdown muay thai",ytkr:"클린치 분석 무에타이 영상"},
+  {cat:"ANA",name:"테이크다운 디펜스 분석",focus:"테이크다운 방어와 <b>다시 일어서는</b> 과정.",watch:"스프롤 타이밍, 언더훅을 되찾는 순서, 벽을 이용해 일어서는 방법.",yt:"takedown defense breakdown mma",ytkr:"테이크다운 디펜스 분석 mma"},
+  {cat:"ANA",name:"링워크·앵글 분석",focus:"원을 그리며 움직여 <b>각도를 만드는</b> 방법.",watch:"상대를 케이지로 몰지 않으면서 어떻게 각을 만드는지.",yt:"angles footwork breakdown boxing",ytkr:"앵글 무브먼트 분석 복싱"},
+  {cat:"ANA",name:"라운드 운영·페이스 분석",focus:"라운드마다 <b>에너지를 배분</b>하는 경기 운영.",watch:"초반 페이스와 후반 스퍼트의 차이, 어느 타이밍에 기어 변속하는지.",yt:"pacing strategy breakdown mma",ytkr:"MMA 라운드 운영 분석"}
+];
+let fState = { cats: Object.keys(F_CATS), history: [], today: null };
+function fGenId() { return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function fLoad() {
+  try { const s = JSON.parse(localStorage.getItem(FORTUNE_KEY)) || {}; fState = { cats: (s.cats||Object.keys(F_CATS)).filter(c=>F_CATS[c]), history: s.history||[], today: s.today||null }; if(!fState.cats.length) fState.cats = Object.keys(F_CATS); }
+  catch(e) { fState = { cats: Object.keys(F_CATS), history: [], today: null }; }
+  let migrated = false;
+  fState.history = fState.history.map(h => { if (!h.id || !h.updated) { migrated = true; return { ...h, id: h.id || fGenId(), updated: h.updated || 1 }; } return h; });
+  if (migrated) fSave();
+}
+function fSave() {
+  localStorage.setItem(FORTUNE_KEY, JSON.stringify(fState));
+  localStorage.setItem("mma:fortune:at", String(Date.now()));
+  if (typeof syncSoon === "function") syncSoon();
+}
+function fTodayKey() { return todayStr(); }
+function fSeedIndex(seedStr, len) { let h=2166136261; for(let i=0;i<seedStr.length;i++){ h^=seedStr.charCodeAt(i); h=Math.imul(h,16777619); } return (h>>>0)%len; }
+function fPool() { const p = F_POOL.filter(m => fState.cats.includes(m.cat)); return p.length ? p : F_POOL; }
+function fEnsureToday(reroll) {
+  const tk = fTodayKey();
+  const valid = fState.today && fState.today.move && F_CATS[fState.today.move.cat];
+  if (!reroll && fState.today && fState.today.date === tk && valid) return;
+  const pool = fPool();
+  const idx = reroll ? Math.floor(Math.random()*pool.length) : fSeedIndex(tk+"|"+fState.cats.join(""), pool.length);
+  fState.today = { date: tk, move: pool[idx], done: false };
+  fSave();
+}
+function renderFortuneCard() {
+  const m = fState.today.move;
+  $("#f-cat-code").textContent = m.cat;
+  $("#f-cat-kr").textContent = F_CATS[m.cat].kr;
+  $("#f-move-name").textContent = m.name;
+  $("#f-move-focus").innerHTML = m.focus;
+  $("#f-move-watch").textContent = m.watch;
+  const db = $("#f-btn-done");
+  db.textContent = fState.today.done ? "완료됨" : "오늘 수련 완료";
+}
+function renderFortuneCats() {
+  $("#fortune-cats").innerHTML = Object.keys(F_CATS).map(code => {
+    const on = fState.cats.includes(code);
+    return `<button class="filter-chip ${on?'active':''}" data-fcat="${code}"><span class="filter-dot" style="background:${on?'var(--bg)':'var(--text-dimmer)'}"></span>${code} · ${F_CATS[code].kr}</button>`;
+  }).join("");
+  $$("#fortune-cats .filter-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.dataset.fcat;
+      const i = fState.cats.indexOf(code);
+      if (i >= 0) { if (fState.cats.length > 1) fState.cats.splice(i,1); }
+      else fState.cats.push(code);
+      fSave();
+      renderFortuneCats();
+    });
+  });
+}
+function renderFortuneStats() {
+  const hist = fState.history;
+  $("#f-stat-total").textContent = hist.length;
+  const days = [...new Set(hist.map(h=>h.date))].sort().reverse();
+  let streak = 0;
+  if (days.length) {
+    let cur = new Date(fTodayKey());
+    const has = new Set(days);
+    const tk = fTodayKey();
+    if (!has.has(tk)) cur.setDate(cur.getDate()-1);
+    while (true) {
+      const k = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,"0")}-${String(cur.getDate()).padStart(2,"0")}`;
+      if (has.has(k)) { streak++; cur.setDate(cur.getDate()-1); } else break;
+    }
+  }
+  $("#f-stat-streak").textContent = streak;
+}
+function renderFortuneLog() {
+  const hist = [...fState.history].reverse().slice(0,8);
+  if (!hist.length) { $("#fortune-log").innerHTML = `<div class="fortune-log-empty">아직 완료한 수련이 없어요.</div>`; return; }
+  $("#fortune-log").innerHTML = hist.map(h => {
+    const md = h.date.slice(5).replace("-","/");
+    const linkHtml = h.link ? `<div class="fl-link">▶ <a href="${escapeHtml(h.link)}" target="_blank" rel="noopener">${escapeHtml(h.link)}</a></div>` : "";
+    const memoHtml = h.memo ? `<div class="fl-memo">— ${escapeHtml(h.memo)}</div>` : "";
+    return `<div class="fortune-log-row" data-id="${h.id}"><div class="fl-top"><span class="fl-date">${md}</span><span class="fl-code">${h.cat}</span><span class="fl-name">${escapeHtml(h.name)}</span></div>${linkHtml}${memoHtml}</div>`;
+  }).join("");
+  $$("#fortune-log .fortune-log-row").forEach(row => {
+    row.addEventListener("click", (e) => {
+      if (e.target.tagName === "A") return; // 링크 클릭은 그대로 이동
+      fOpenEntryForm(row.dataset.id);
+    });
+  });
+}
+function renderFortune() {
+  fEnsureToday(false);
+  renderFortuneCard();
+  renderFortuneCats();
+  renderFortuneStats();
+  renderFortuneLog();
+  fPopulateBackfillCats();
+}
+let fEditingId = null;
+function fPopulateBackfillCats() {
+  const sel = $("#fb-cat");
+  if (!sel.options.length) {
+    sel.innerHTML = Object.keys(F_CATS).map(code => `<option value="${code}">${code} · ${F_CATS[code].kr}</option>`).join("");
+    fPopulateBackfillMoves();
+    sel.addEventListener("change", fPopulateBackfillMoves);
+    $("#fb-date").value = fTodayKey();
+  }
+}
+function fPopulateBackfillMoves() {
+  const cat = $("#fb-cat").value;
+  const moves = F_POOL.filter(m => m.cat === cat);
+  $("#fb-move").innerHTML = moves.map((m,i) => `<option value="${i}">${m.name}</option>`).join("");
+}
+function fOpenEntryForm(entryId) {
+  fEditingId = entryId || null;
+  $("#f-backfill-body").classList.remove("hidden");
+  $("#f-backfill-chevron").classList.add("open");
+  if (fEditingId) {
+    const entry = fState.history.find(h => h.id === fEditingId);
+    if (!entry) { fCloseBackfill(); return; }
+    $("#fb-date").value = entry.date;
+    $("#fb-cat").value = entry.cat;
+    fPopulateBackfillMoves();
+    const moves = F_POOL.filter(m => m.cat === entry.cat);
+    const idx = moves.findIndex(m => m.name === entry.name);
+    $("#fb-move").value = idx >= 0 ? idx : 0;
+    $("#fb-link").value = entry.link || "";
+    $("#fb-memo").value = entry.memo || "";
+    $("#fb-save").textContent = "수정 저장";
+    $("#fb-delete").classList.remove("hidden");
+    $("#f-backfill-label").textContent = "기록 수정 중";
+  } else {
+    $("#fb-date").value = fTodayKey();
+    $("#fb-link").value = "";
+    $("#fb-memo").value = "";
+    $("#fb-save").textContent = "이 날짜로 기록 저장";
+    $("#fb-delete").classList.add("hidden");
+    $("#f-backfill-label").textContent = "+ 지난 기록 추가";
+  }
+}
+function fCloseBackfill() {
+  fEditingId = null;
+  $("#f-backfill-body").classList.add("hidden");
+  $("#f-backfill-chevron").classList.remove("open");
+  $("#f-backfill-label").textContent = "+ 지난 기록 추가";
+  $("#fb-delete").classList.add("hidden");
+  $("#fb-save").textContent = "이 날짜로 기록 저장";
+}
+function fSaveBackfill() {
+  const date = $("#fb-date").value;
+  if (!date) { alert("날짜를 선택해주세요."); return; }
+  const cat = $("#fb-cat").value;
+  const moves = F_POOL.filter(m => m.cat === cat);
+  const move = moves[Number($("#fb-move").value)];
+  if (!move) { alert("기술을 선택해주세요."); return; }
+  const link = $("#fb-link").value.trim();
+  const memo = $("#fb-memo").value.trim();
+  if (fEditingId) {
+    fState.history = fState.history.map(h => h.id === fEditingId ? { ...h, date, cat: move.cat, name: move.name, link, memo, updated: Date.now() } : h);
+  } else {
+    fState.history.push({ id: fGenId(), date, cat: move.cat, name: move.name, link, memo, updated: Date.now() });
+  }
+  fState.history.sort((a,b) => a.date < b.date ? -1 : 1);
+  fSave();
+  renderFortuneStats();
+  renderFortuneLog();
+  fCloseBackfill();
+}
+function fDeleteBackfillEntry() {
+  if (!fEditingId) return;
+  if (!confirm("이 기록을 삭제할까요?")) return;
+  tombAdd("fortune", fEditingId);
+  fState.history = fState.history.filter(h => h.id !== fEditingId);
+  fSave();
+  renderFortuneStats();
+  renderFortuneLog();
+  fCloseBackfill();
+}
+function fCollectNote() {
+  return { link: $("#f-link").value.trim(), memo: $("#f-memo").value.trim() };
+}
+function fClearNote() {
+  $("#f-link").value = "";
+  $("#f-memo").value = "";
+}
+function fMarkDone(note) {
+  if (fState.today.done) return;
+  fState.today.done = true;
+  const m = fState.today.move;
+  fState.history.push({ id: fGenId(), date: fState.today.date, cat: m.cat, name: m.name, link: (note&&note.link)||"", memo: (note&&note.memo)||"", updated: Date.now() });
+  fSave();
+  renderFortuneCard();
+  renderFortuneStats();
+  renderFortuneLog();
+}
+function fLogReviewOnly() {
+  const m = fState.today.move;
+  const note = fCollectNote();
+  if (!note.link && !note.memo) { alert("링크나 메모 중 하나는 입력해주세요."); return; }
+  fState.history.push({ id: fGenId(), date: fState.today.date, cat: m.cat, name: m.name, link: note.link, memo: note.memo, updated: Date.now() });
+  fSave();
+  renderFortuneStats();
+  renderFortuneLog();
+  fClearNote();
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function migrateEntry(e) {
+  if (!e.types || !Array.isArray(e.types)) {
+    const map = {
+      "technique": ["technique"],
+      "sparring": ["mma_sparring"],
+      "conditioning": ["conditioning"],
+      "flexibility": ["flexibility"],
+      "mixed": ["technique", "conditioning"]
+    };
+    e = { ...e, types: map[e.type] || ["technique"] };
+  }
+  // 기존에 라운드만 적혀 있던 기록은 자동으로 1타임으로 잡음
+  if (Number(e.mma_rounds || 0) > 0 && e.mma_sessions == null) e.mma_sessions = 1;
+  if (Number(e.grappling_rounds || 0) > 0 && e.grappling_sessions == null) e.grappling_sessions = 1;
+  // 동기화 충돌 판정용 타임스탬프
+  if (!e.updated) e.updated = Number(e.id) || 1;
+  return e;
+}
+function loadEntries() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    state.entries = raw.map(migrateEntry);
+  }
+  catch (e) { state.entries = []; }
+}
+function saveEntries() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries)); syncSoon(); }
+
+/* ===== 동기화 (Cloudflare Worker + KV) ===== */
+const SYNC_CFG_KEY = "mma:sync:cfg";
+const TOMB_KEY = "mma:tomb:v1";
+let syncCfg = { url: "", token: "" };
+let tombs = { entries: [], fortune: [] };
+let syncTimer = null;
+let syncing = false;
+
+function syncLoadCfg() {
+  try { syncCfg = { url: "", token: "", ...(JSON.parse(localStorage.getItem(SYNC_CFG_KEY)) || {}) }; }
+  catch (e) { syncCfg = { url: "", token: "" }; }
+  try { tombs = { entries: [], fortune: [], ...(JSON.parse(localStorage.getItem(TOMB_KEY)) || {}) }; }
+  catch (e) { tombs = { entries: [], fortune: [] }; }
+}
+function syncSaveCfg() { localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(syncCfg)); }
+function tombSave() { localStorage.setItem(TOMB_KEY, JSON.stringify(tombs)); }
+function tombAdd(kind, id) {
+  tombs[kind] = (tombs[kind] || []).filter(t => String(t.id) !== String(id));
+  tombs[kind].push({ id: String(id), at: Date.now() });
+  tombSave();
+}
+function syncEnabled() { return !!(syncCfg.url && syncCfg.token); }
+function syncStatus(msg, cls) {
+  const el = $("#sync-status");
+  el.textContent = msg || "";
+  el.className = "sync-status" + (cls ? " " + cls : "");
+}
+
+function mergeById(localArr, remoteArr, tombList) {
+  const map = new Map();
+  for (const it of (localArr || [])) map.set(String(it.id), it);
+  for (const it of (remoteArr || [])) {
+    const k = String(it.id);
+    const cur = map.get(k);
+    if (!cur || (it.updated || 0) > (cur.updated || 0)) map.set(k, it);
+  }
+  const tombMap = new Map((tombList || []).map(t => [String(t.id), t.at || 0]));
+  return [...map.values()].filter(it => {
+    const at = tombMap.get(String(it.id));
+    return !(at && at >= (it.updated || 0));
+  });
+}
+
+function mergeTombs(a, b) {
+  const map = new Map();
+  for (const t of [...(a || []), ...(b || [])]) {
+    const k = String(t.id);
+    if (!map.has(k) || (t.at || 0) > map.get(k).at) map.set(k, { id: k, at: t.at || 0 });
+  }
+  // 오래된 삭제 기록은 90일 후 정리
+  const cutoff = Date.now() - 90 * 24 * 3600 * 1000;
+  return [...map.values()].filter(t => t.at >= cutoff);
+}
+
+function syncSoon() {
+  if (!syncEnabled()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncNow(true), 1500);
+}
+
+async function syncNow(quiet) {
+  if (!syncEnabled()) { if (!quiet) syncStatus("동기화 설정이 필요합니다", "err"); return; }
+  if (syncing) return;
+  syncing = true;
+  syncStatus("동기화 중…", "busy");
+  const base = syncCfg.url.replace(/\/+$/, "");
+  const headers = { "Content-Type": "application/json", "X-Auth-Token": syncCfg.token };
+  try {
+    const res = await fetch(base + "/data", { headers });
+    if (!res.ok) throw new Error(res.status === 401 ? "토큰이 맞지 않습니다" : "서버 응답 " + res.status);
+    const remote = await res.json();
+
+    const mergedTombEntries = mergeTombs(tombs.entries, remote.tombs && remote.tombs.entries);
+    const mergedTombFortune = mergeTombs(tombs.fortune, remote.tombs && remote.tombs.fortune);
+
+    const mergedEntries = mergeById(state.entries, remote.entries, mergedTombEntries)
+      .sort((a, b) => a.date < b.date ? 1 : -1);
+
+    const rf = remote.fortune || {};
+    const mergedHistory = mergeById(fState.history, rf.history, mergedTombFortune)
+      .sort((a, b) => a.date < b.date ? -1 : 1);
+
+    // 오늘 뽑은 기술·선택한 파트는 더 최근에 저장된 쪽을 따름
+    const localFortuneAt = Number(localStorage.getItem("mma:fortune:at") || 0);
+    const remoteAt = Number(remote.updatedAt || 0);
+    const takeRemoteMeta = remoteAt > localFortuneAt && rf.today;
+
+    state.entries = mergedEntries;
+    fState.history = mergedHistory;
+    if (takeRemoteMeta) {
+      if (Array.isArray(rf.cats) && rf.cats.length) fState.cats = rf.cats.filter(c => F_CATS[c]);
+      if (rf.today) fState.today = rf.today;
+    }
+    tombs = { entries: mergedTombEntries, fortune: mergedTombFortune };
+    tombSave();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries));
+    localStorage.setItem(FORTUNE_KEY, JSON.stringify(fState));
+
+    const payload = {
+      entries: state.entries,
+      fortune: { cats: fState.cats, history: fState.history, today: fState.today },
+      tombs: tombs,
+    };
+    const put = await fetch(base + "/data", { method: "PUT", headers, body: JSON.stringify(payload) });
+    if (!put.ok) throw new Error("저장 실패 " + put.status);
+    const putRes = await put.json();
+    localStorage.setItem("mma:fortune:at", String(putRes.updatedAt || Date.now()));
+
+    renderStats(); renderMonthly(); renderFilters(); renderClassFilters(); renderEntries();
+    if (state.view === "calendar") renderCalendar();
+    if (state.view === "fortune") renderFortune();
+
+    const t = new Date();
+    syncStatus(`동기화 완료 · ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`, "ok");
+  } catch (e) {
+    syncStatus("동기화 실패: " + e.message, "err");
+  } finally {
+    syncing = false;
+  }
+}
+function typeMeta(id) { return TRAINING_TYPES.find(t => t.id === id) || TRAINING_TYPES[0]; }
+function escapeHtml(str) {
+  return String(str || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+function renderStats() {
+  const total = state.entries.length;
+  const mmaTaimTotal = state.entries.reduce((s,e) => s + Number(e.mma_sessions || 0), 0);
+  const mmaRoundsTotal = state.entries.reduce((s,e) => s + Number(e.mma_rounds || 0), 0);
+  const grapplingTaimTotal = state.entries.reduce((s,e) => s + Number(e.grappling_sessions || 0), 0);
+  const grapplingRoundsTotal = state.entries.reduce((s,e) => s + Number(e.grappling_rounds || 0), 0);
+  const avgCardio = total ? (state.entries.reduce((s,e) => s + Number(e.cardio||0), 0) / total).toFixed(1) : "—";
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0,0,0,0);
+  const thisWeek = state.entries.filter(e => new Date(e.date) >= weekStart).length;
+
+  $("#stats").innerHTML = `
+    <div class="stat-card"><div class="stat-label">총 세션</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card accent"><div class="stat-label">이번 주</div><div class="stat-value">${thisWeek}</div></div>
+    <div class="stat-card"><div class="stat-label">MMA 스파링</div><div class="stat-value">${mmaRoundsTotal}<span class="stat-suffix">판 · ${mmaTaimTotal}타임</span></div></div>
+    <div class="stat-card"><div class="stat-label">레슬링/주짓수</div><div class="stat-value">${grapplingRoundsTotal}<span class="stat-suffix">판 · ${grapplingTaimTotal}타임</span></div></div>
+    <div class="stat-card"><div class="stat-label">평균 카디오</div><div class="stat-value">${avgCardio}<span class="stat-suffix">/10</span></div></div>`;
+  $("#entry-count").textContent = total;
+}
+
+function renderMonthly() {
+  const groups = {};
+  for (const e of state.entries) {
+    const ym = (e.date || "").slice(0, 7);
+    if (!ym) continue;
+    (groups[ym] = groups[ym] || []).push(e);
+  }
+  const months = Object.keys(groups).sort().reverse();
+  if (months.length === 0) { $("#monthly").style.display = "none"; return; }
+  $("#monthly").style.display = "block";
+
+  $("#monthly-body").innerHTML = `<div class="month-grid">${months.map(ym => {
+    const items = groups[ym];
+    const n = items.length;
+    const avgCardio = (items.reduce((s,e) => s + Number(e.cardio||0), 0) / n).toFixed(1);
+    const avgCondition = (items.reduce((s,e) => s + Number(e.condition||0), 0) / n).toFixed(1);
+    const mmaTaim = items.reduce((s,e) => s + Number(e.mma_sessions||0), 0);
+    const mmaRounds = items.reduce((s,e) => s + Number(e.mma_rounds||0), 0);
+    const grapTaim = items.reduce((s,e) => s + Number(e.grappling_sessions||0), 0);
+    const grapRounds = items.reduce((s,e) => s + Number(e.grappling_rounds||0), 0);
+    const [y, m] = ym.split("-");
+    return `<div class="month-card">
+      <div class="month-card-top">
+        <span class="month-name">${y}년 ${Number(m)}월</span>
+        <span class="month-sessions">${n}세션</span>
+      </div>
+      <div class="month-metrics">
+        <div class="month-metric"><div class="month-metric-label">평균 카디오</div><div class="month-metric-value">${avgCardio}<span class="unit"> /10</span></div></div>
+        <div class="month-metric"><div class="month-metric-label">평균 컨디션</div><div class="month-metric-value">${avgCondition}<span class="unit"> /10</span></div></div>
+        <div class="month-metric"><div class="month-metric-label">MMA 스파링</div><div class="month-metric-value">${mmaRounds}<span class="unit">판 · ${mmaTaim}타임</span></div></div>
+        <div class="month-metric"><div class="month-metric-label">레슬링/주짓수</div><div class="month-metric-value">${grapRounds}<span class="unit">판 · ${grapTaim}타임</span></div></div>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
+}
+
+function setView(view) {
+  state.view = view;
+  $$(".view-btn").forEach(b => b.classList.toggle("active", b.dataset.view === view));
+  const calendar = view === "calendar";
+  const fortune = view === "fortune";
+  $("#calendar").style.display = calendar ? "block" : "none";
+  $("#fortune-view").style.display = fortune ? "block" : "none";
+  $("#filters").style.display = (calendar || fortune) ? "none" : "flex";
+  $("#class-filters").style.display = (calendar || fortune) ? "none" : "flex";
+  $("#content").style.display = (calendar || fortune) ? "none" : "block";
+  $("#monthly").style.display = fortune ? "none" : (state.entries.length ? "block" : "none");
+  if (calendar) renderCalendar();
+  if (fortune) renderFortune();
+}
+
+function renderCalendar() {
+  const year = calMonth.getFullYear();
+  const month = calMonth.getMonth();
+  $("#cal-title").textContent = `${year}년 ${month+1}월`;
+
+  const byDate = {};
+  for (const e of state.entries) (byDate[e.date] = byDate[e.date] || []).push(e);
+
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayString = todayStr();
+
+  let cells = "";
+  for (let i = 0; i < firstWeekday; i++) cells += `<div class="cal-cell empty"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const dayEntries = byDate[dateStr] || [];
+    const has = dayEntries.length > 0;
+    const isToday = dateStr === todayString;
+    const allTypes = [...new Set(dayEntries.flatMap(e => e.types || []))];
+    const dots = allTypes.slice(0,4).map(t => `<span class="cal-dot ${typeMeta(t).color}"></span>`).join("");
+    cells += `<div class="cal-cell ${has?'has-entry':''} ${isToday?'today':''}" ${has?`data-date="${dateStr}"`:''}>
+      <span>${d}</span>
+      ${dots ? `<div class="cal-dots">${dots}</div>` : ''}
+    </div>`;
+  }
+  $("#cal-grid").innerHTML = cells;
+  $("#cal-legend").innerHTML = TRAINING_TYPES.map(t =>
+    `<span class="cal-legend-item"><span class="cal-dot ${t.color}"></span>${t.label}</span>`
+  ).join("");
+
+  $$("#cal-grid .cal-cell.has-entry").forEach(cell => {
+    cell.addEventListener("click", () => {
+      const dayEntries = state.entries.filter(e => e.date === cell.dataset.date);
+      if (dayEntries.length) openEdit(dayEntries[0].id);
+    });
+  });
+}
+
+function renderClassFilters() {
+  let html = `<button class="filter-chip ${state.classFilter==='all'?'active':''}" data-cfilter="all">수업: 전체</button>`;
+  for (const c of CLASS_TYPES) {
+    html += `<button class="filter-chip ${state.classFilter===c.id?'active':''}" data-cfilter="${c.id}"><span class="filter-dot ${c.color}"></span>${c.label}</button>`;
+  }
+  $("#class-filters").innerHTML = html;
+  $$("#class-filters .filter-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.classFilter = btn.dataset.cfilter;
+      renderClassFilters();
+      renderEntries();
+    });
+  });
+}
+
+function renderFilters() {
+  let html = `<button class="filter-chip ${state.filter==='all'?'active':''}" data-filter="all">전체</button>`;
+  for (const t of TRAINING_TYPES) {
+    html += `<button class="filter-chip ${state.filter===t.id?'active':''}" data-filter="${t.id}"><span class="filter-dot ${t.color}"></span>${t.label}</button>`;
+  }
+  $("#filters").innerHTML = html;
+  $$("#filters .filter-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.filter = btn.dataset.filter;
+      renderFilters();
+      renderEntries();
+    });
+  });
+}
+
+function renderEntries() {
+  let filtered = state.filter === "all" ? state.entries : state.entries.filter(e => e.types.includes(state.filter));
+  filtered = state.classFilter === "all" ? filtered : filtered.filter(e => e.classType === state.classFilter);
+  if (filtered.length === 0) {
+    const hasAny = state.entries.length > 0;
+    $("#content").innerHTML = `
+      <div class="empty">
+        <div class="empty-title">${hasAny ? "이 유형의 기록 없음" : "첫 기록을 남겨보세요"}</div>
+        <p class="empty-text">${hasAny ? "필터를 바꿔보거나 새로 추가하세요" : "오늘 훈련부터 차곡차곡"}</p>
+        <button class="btn-primary" id="empty-add">+ 기록 추가</button>
+      </div>`;
+    $("#empty-add").addEventListener("click", openNew);
+    return;
+  }
+  const sorted = [...filtered].sort((a,b) => a.date < b.date ? 1 : -1);
+  const days = ["일","월","화","수","목","금","토"];
+  $("#content").innerHTML = `<ul class="entries">${sorted.map(entry => {
+    const d = new Date(entry.date);
+    const badges = entry.types.map(t => { const m = typeMeta(t); return `<span class="type-badge ${m.color}">${m.label}</span>`; }).join("");
+    const classMeta = entry.classType ? CLASS_TYPES.find(c => c.id === entry.classType) : null;
+    const classBadge = classMeta ? `<span class="type-badge ${classMeta.color}">${classMeta.label}</span>` : "";
+    const roundsBits = [];
+    if (entry.types.includes("mma_sparring") && (entry.mma_rounds || entry.mma_sessions)) {
+      const t = entry.mma_sessions || 0, r = entry.mma_rounds || 0;
+      const focusMeta = entry.mma_focus ? MMA_FOCUS.find(f => f.id === entry.mma_focus) : null;
+      const modeMeta = entry.sparring_mode ? SPARRING_MODE.find(m => m.id === entry.sparring_mode) : null;
+      const tagBits = [focusMeta && focusMeta.label, modeMeta && modeMeta.label].filter(Boolean);
+      const focusStr = tagBits.length ? ` (${tagBits.join(" · ")})` : "";
+      roundsBits.push(t > 1 ? `MMA ${t}타임 ${r}판${focusStr}` : `MMA ${r}판${focusStr}`);
+    }
+    if (entry.types.includes("grappling") && (entry.grappling_rounds || entry.grappling_sessions)) {
+      const t = entry.grappling_sessions || 0, r = entry.grappling_rounds || 0;
+      roundsBits.push(t > 1 ? `그래플 ${t}타임 ${r}판` : `그래플 ${r}판`);
+    }
+    const roundsHtml = roundsBits.length ? `<span class="font-mono" style="font-size:0.75rem;color:var(--accent-bright)">· ${roundsBits.join(" · ")}</span>` : "";
+    return `<li class="entry">
+      <div class="entry-date">
+        <div class="entry-date-num">${d.getMonth()+1}.${String(d.getDate()).padStart(2,"0")}</div>
+        <div class="entry-date-day">${days[d.getDay()]}요일</div>
+      </div>
+      <div class="entry-content">
+        <div class="entry-meta">
+          ${classBadge}
+          ${badges}
+          <span class="font-mono" style="font-size:0.75rem;color:var(--text-dimmer)">${entry.duration}분</span>
+          ${roundsHtml}
+          ${entry.weight ? `<span class="font-mono" style="font-size:0.75rem;color:var(--text-dimmer)">· ${entry.weight}kg</span>` : ""}
+          <div class="entry-stats">
+            <span>카디오 <span>${entry.cardio}</span>/10</span>
+            <span>컨디션 <span>${entry.condition}</span>/10</span>
+          </div>
+        </div>
+        ${entry.techniques ? `<p class="entry-tech">${escapeHtml(entry.techniques)}</p>` : ""}
+        ${entry.reflection ? `<p class="entry-reflection">— ${escapeHtml(entry.reflection)}</p>` : ""}
+      </div>
+      <div class="entry-actions">
+        <button class="entry-action-btn edit" data-id="${entry.id}">수정</button>
+        <button class="entry-action-btn delete" data-id="${entry.id}">삭제</button>
+      </div>
+    </li>`;
+  }).join("")}</ul>`;
+
+  $$(".entry-action-btn.edit").forEach(btn => btn.addEventListener("click", () => openEdit(Number(btn.dataset.id))));
+  $$(".entry-action-btn.delete").forEach(btn => btn.addEventListener("click", () => deleteEntry(Number(btn.dataset.id))));
+}
+
+function updateRoundsFields() {
+  $("#mma-rounds-field").style.display = state.formTypes.includes("mma_sparring") ? "grid" : "none";
+  $("#mma-focus-field").style.display = state.formTypes.includes("mma_sparring") ? "block" : "none";
+  $("#sparring-mode-field").style.display = state.formTypes.includes("mma_sparring") ? "block" : "none";
+  $("#grappling-rounds-field").style.display = state.formTypes.includes("grappling") ? "grid" : "none";
+}
+
+function renderMmaFocusGrid() {
+  $("#mma-focus-grid").innerHTML = MMA_FOCUS.map(f =>
+    `<button class="type-btn ${state.formMmaFocus===f.id?'active '+f.color:''}" data-focus="${f.id}">${f.label}</button>`
+  ).join("");
+  $$("#mma-focus-grid .type-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.focus;
+      state.formMmaFocus = state.formMmaFocus === id ? null : id;
+      renderMmaFocusGrid();
+    });
+  });
+}
+
+function renderSparringModeGrid() {
+  $("#sparring-mode-grid").innerHTML = SPARRING_MODE.map(m =>
+    `<button class="type-btn ${state.formSparringMode===m.id?'active '+m.color:''}" data-mode="${m.id}">${m.label}</button>`
+  ).join("");
+  $$("#sparring-mode-grid .type-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.mode;
+      state.formSparringMode = state.formSparringMode === id ? null : id;
+      renderSparringModeGrid();
+    });
+  });
+}
+
+function renderClassGrid() {
+  $("#class-grid").innerHTML = CLASS_TYPES.map(c =>
+    `<button class="type-btn ${state.formClass===c.id?'active '+c.color:''}" data-class="${c.id}">${c.label}</button>`
+  ).join("");
+  $$("#class-grid .type-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.class;
+      state.formClass = state.formClass === id ? null : id;
+      renderClassGrid();
+    });
+  });
+}
+
+function renderTypeGrid() {
+  $("#type-grid").innerHTML = TRAINING_TYPES.map(t =>
+    `<button class="type-btn ${state.formTypes.includes(t.id)?'active '+t.color:''}" data-type="${t.id}">${t.label}</button>`
+  ).join("");
+  $$("#type-grid .type-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.type;
+      if (state.formTypes.includes(id)) {
+        if (state.formTypes.length > 1) state.formTypes = state.formTypes.filter(t => t !== id);
+      } else {
+        state.formTypes = [...state.formTypes, id];
+      }
+      renderTypeGrid();
+      updateRoundsFields();
+    });
+  });
+  updateRoundsFields();
+}
+
+function openNew() {
+  state.editingId = null;
+  state.formTypes = ["technique"];
+  state.formClass = null;
+  state.formMmaFocus = null;
+  state.formSparringMode = null;
+  $("#modal-title").textContent = "오늘의 훈련";
+  $("#save-btn").textContent = "기록 저장";
+  $("#f-date").value = todayStr();
+  $("#f-duration").value = 90;
+  $("#f-cardio").value = 6; $("#cardio-display").textContent = 6;
+  $("#f-condition").value = 7; $("#condition-display").textContent = 7;
+  $("#f-weight").value = "";
+  $("#f-mma-sessions").value = "";
+  $("#f-mma-rounds").value = "";
+  $("#f-grappling-sessions").value = "";
+  $("#f-grappling-rounds").value = "";
+  $("#f-techniques").value = "";
+  $("#f-reflection").value = "";
+  renderTypeGrid();
+  renderClassGrid();
+  renderMmaFocusGrid();
+  renderSparringModeGrid();
+  $("#modal").classList.remove("hidden");
+}
+
+function openEdit(id) {
+  const entry = state.entries.find(e => e.id === id);
+  if (!entry) return;
+  state.editingId = id;
+  state.formTypes = [...entry.types];
+  state.formClass = entry.classType || null;
+  state.formMmaFocus = entry.mma_focus || null;
+  state.formSparringMode = entry.sparring_mode || null;
+  $("#modal-title").textContent = "기록 수정";
+  $("#save-btn").textContent = "수정 완료";
+  $("#f-date").value = entry.date;
+  $("#f-duration").value = entry.duration;
+  $("#f-cardio").value = entry.cardio; $("#cardio-display").textContent = entry.cardio;
+  $("#f-condition").value = entry.condition; $("#condition-display").textContent = entry.condition;
+  $("#f-weight").value = entry.weight || "";
+  $("#f-mma-sessions").value = entry.mma_sessions || "";
+  $("#f-mma-rounds").value = entry.mma_rounds || "";
+  $("#f-grappling-sessions").value = entry.grappling_sessions || "";
+  $("#f-grappling-rounds").value = entry.grappling_rounds || "";
+  $("#f-techniques").value = entry.techniques || "";
+  $("#f-reflection").value = entry.reflection || "";
+  renderTypeGrid();
+  renderClassGrid();
+  renderMmaFocusGrid();
+  renderSparringModeGrid();
+  $("#modal").classList.remove("hidden");
+}
+
+function closeModal() { $("#modal").classList.add("hidden"); }
+
+function saveCurrent() {
+  const date = $("#f-date").value;
+  const duration = Number($("#f-duration").value);
+  if (!date) { alert("날짜를 입력해주세요"); return; }
+  if (!duration || duration <= 0) { alert("훈련 시간을 입력해주세요"); return; }
+
+  const data = {
+    date, types: [...state.formTypes], classType: state.formClass, duration,
+    cardio: Number($("#f-cardio").value),
+    condition: Number($("#f-condition").value),
+    weight: $("#f-weight").value || "",
+    mma_sessions: state.formTypes.includes("mma_sparring") ? (Number($("#f-mma-sessions").value) || 0) : 0,
+    mma_rounds: state.formTypes.includes("mma_sparring") ? (Number($("#f-mma-rounds").value) || 0) : 0,
+    mma_focus: state.formTypes.includes("mma_sparring") ? state.formMmaFocus : null,
+    sparring_mode: state.formTypes.includes("mma_sparring") ? state.formSparringMode : null,
+    grappling_sessions: state.formTypes.includes("grappling") ? (Number($("#f-grappling-sessions").value) || 0) : 0,
+    grappling_rounds: state.formTypes.includes("grappling") ? (Number($("#f-grappling-rounds").value) || 0) : 0,
+    techniques: $("#f-techniques").value,
+    reflection: $("#f-reflection").value
+  };
+
+  if (state.editingId) {
+    state.entries = state.entries.map(e => e.id === state.editingId ? { ...e, ...data, updated: Date.now() } : e);
+  } else {
+    const now = Date.now();
+    state.entries.unshift({ id: now, ...data, updated: now });
+  }
+  state.entries.sort((a,b) => a.date < b.date ? 1 : -1);
+  saveEntries();
+  closeModal();
+  renderStats();
+  renderMonthly();
+  renderEntries();
+  if (state.view === "calendar") renderCalendar();
+}
+
+function deleteEntry(id) {
+  if (!confirm("이 기록을 삭제할까요?")) return;
+  state.entries = state.entries.filter(e => e.id !== id);
+  tombAdd("entries", id);
+  saveEntries();
+  renderStats();
+  renderMonthly();
+  renderEntries();
+  if (state.view === "calendar") renderCalendar();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state.entries, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `fightlog-${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error("invalid");
+      const replace = !confirm(`${data.length}개 항목을 가져옵니다.\n\n[확인] 기존 ${state.entries.length}개와 합치기\n[취소] 기존 데이터 덮어쓰기`);
+      if (replace) {
+        state.entries = data.map(migrateEntry);
+      } else {
+        const existingIds = new Set(state.entries.map(x => x.id));
+        const merged = [...state.entries];
+        for (const item of data) if (!existingIds.has(item.id)) merged.push(migrateEntry(item));
+        state.entries = merged;
+      }
+      state.entries.sort((a,b) => a.date < b.date ? 1 : -1);
+      saveEntries();
+      renderStats();
+      renderMonthly();
+      renderEntries();
+      alert("가져오기 완료");
+    } catch (err) {
+      alert("올바른 JSON 백업 파일이 아닙니다.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+loadEntries();
+fLoad();
+syncLoadCfg();
+renderStats();
+renderMonthly();
+renderFilters();
+renderClassFilters();
+renderEntries();
+
+$("#monthly-toggle").addEventListener("click", () => { $("#monthly").classList.toggle("collapsed"); });
+$$(".view-btn").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+$("#cal-prev").addEventListener("click", () => { calMonth.setMonth(calMonth.getMonth()-1); renderCalendar(); });
+$("#cal-next").addEventListener("click", () => { calMonth.setMonth(calMonth.getMonth()+1); renderCalendar(); });
+$("#add-btn").addEventListener("click", openNew);
+$("#modal-close").addEventListener("click", closeModal);
+$("#cancel-btn").addEventListener("click", closeModal);
+$("#save-btn").addEventListener("click", saveCurrent);
+$("#modal").addEventListener("click", (e) => { if (e.target === $("#modal")) closeModal(); });
+$("#f-cardio").addEventListener("input", (e) => { $("#cardio-display").textContent = e.target.value; });
+$("#f-condition").addEventListener("input", (e) => { $("#condition-display").textContent = e.target.value; });
+$("#export-btn").addEventListener("click", exportData);
+$("#import-btn").addEventListener("click", () => $("#import-file").click());
+$("#import-file").addEventListener("change", (e) => { if (e.target.files[0]) importData(e.target.files[0]); });
+
+$("#f-btn-kr").addEventListener("click", () => { window.open("https://www.youtube.com/results?search_query="+encodeURIComponent(fState.today.move.ytkr), "_blank"); });
+$("#f-btn-en").addEventListener("click", () => { window.open("https://www.youtube.com/results?search_query="+encodeURIComponent(fState.today.move.yt), "_blank"); });
+$("#f-btn-reroll").addEventListener("click", () => { fEnsureToday(true); renderFortuneCard(); fClearNote(); });
+$("#f-btn-done").addEventListener("click", () => { const note = fCollectNote(); fMarkDone(note); fClearNote(); });
+$("#f-btn-log").addEventListener("click", fLogReviewOnly);
+$("#f-backfill-toggle").addEventListener("click", () => {
+  const isHidden = $("#f-backfill-body").classList.contains("hidden");
+  if (isHidden) { fOpenEntryForm(null); } else { fCloseBackfill(); }
+});
+$("#fb-save").addEventListener("click", fSaveBackfill);
+$("#fb-delete").addEventListener("click", fDeleteBackfillEntry);
+
+$("#sync-btn").addEventListener("click", () => syncNow(false));
+$("#sync-cfg-btn").addEventListener("click", () => {
+  const panel = $("#sync-panel");
+  panel.classList.toggle("hidden");
+  if (!panel.classList.contains("hidden")) {
+    $("#sync-url").value = syncCfg.url || "";
+    $("#sync-token").value = syncCfg.token || "";
+  }
+});
+$("#sync-save-btn").addEventListener("click", () => {
+  syncCfg.url = $("#sync-url").value.trim();
+  syncCfg.token = $("#sync-token").value.trim();
+  if (!syncCfg.url || !syncCfg.token) { syncStatus("주소와 토큰을 모두 입력해주세요", "err"); return; }
+  syncSaveCfg();
+  $("#sync-panel").classList.add("hidden");
+  syncNow(false);
+});
+$("#sync-clear-btn").addEventListener("click", () => {
+  if (!confirm("이 기기에서 동기화 연결을 해제할까요? (기록은 남습니다)")) return;
+  syncCfg = { url: "", token: "" };
+  syncSaveCfg();
+  $("#sync-panel").classList.add("hidden");
+  syncStatus("동기화 해제됨");
+});
+
+if (syncEnabled()) syncNow(true);
+</script>
+</body>
+</html>
