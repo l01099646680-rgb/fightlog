@@ -27,12 +27,33 @@ html { font-size: 18px; }
 @media (min-width: 1280px) { html { font-size: 19px; } }
 body {
   background: var(--bg);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(226,58,46,0.11) 0 1.5px, transparent 1.5px 30px),
+    repeating-linear-gradient(-45deg, rgba(226,58,46,0.11) 0 1.5px, transparent 1.5px 30px);
+  background-attachment: fixed;
   color: var(--text);
   font-family: 'Noto Sans KR', sans-serif;
   min-height: 100vh;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
+.header::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 200px;
+  height: 200px;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20220%20220%22%3E%3Cg%20fill%3D%22%23E23A2E%22%3E%3Ccircle%20cx%3D%22112%22%20cy%3D%2240%22%20r%3D%2221%22%2F%3E%3Cpath%20d%3D%22M98%2064%20L72%20102%20L70%20142%20L84%20172%20L102%20172%20L98%20134%20L114%20104%20L130%20134%20L126%20172%20L146%20172%20L158%20140%20L154%20100%20L130%2064%20Z%22%2F%3E%3Cpath%20d%3D%22M100%2070%20L54%2060%20L38%2038%20L22%2044%20L40%2072%20L98%2090%20Z%22%2F%3E%3Cpath%20d%3D%22M128%2070%20L174%2056%20L192%2032%20L206%2040%20L188%2072%20L130%2092%20Z%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2240%22%20r%3D%2215%22%2F%3E%3Ccircle%20cx%3D%22208%22%20cy%3D%2234%22%20r%3D%2215%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+}
+.header > * { position: relative; z-index: 1; }
+@media (max-width: 639px) { .header::after { display: none; } }
 .font-display { font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif; letter-spacing: 0.05em; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 .container { max-width: 88rem; margin: 0 auto; padding: 2rem 1rem; }
@@ -48,6 +69,7 @@ body {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
+  position: relative;
 }
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
 .header-bar { width: 6px; height: 2.5rem; background: var(--accent); }
@@ -112,6 +134,15 @@ body {
 .cal-cell.has-entry { border-color: var(--border); background: rgba(24,24,27,0.6); cursor: pointer; color: var(--text); }
 .cal-cell.has-entry:hover { background: rgba(39,39,42,0.9); border-color: #52525b; }
 .cal-cell.today { border-color: var(--accent); }
+.cal-cell.holiday .cal-daynum { color: #f87171; }
+.cal-cell.holiday .cal-holiday-name { font-size: 0.5rem; color: #f87171; opacity: 0.85; line-height: 1; margin-top: 1px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-cell.rest { cursor: pointer; }
+.cal-cell.rest .cal-daynum { color: var(--text-dimmer); }
+.cal-cell.rest-marked { background: rgba(82,82,91,0.25); border-color: #3f3f46; }
+.cal-cell.rest-marked .cal-rest-label { font-size: 0.55rem; color: #a1a1aa; margin-top: 1px; }
+.cal-cell.rest-closed { background: rgba(217,119,6,0.14); border-color: #92400e; }
+.cal-cell.rest-closed .cal-rest-label { color: #d97706; }
+.cal-cell:not(.has-entry):hover { background: rgba(39,39,42,0.4); cursor: pointer; }
 .cal-dots { display: flex; gap: 2px; position: absolute; bottom: 5px; }
 .cal-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
 .cal-legend { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; margin-top: 1.25rem; justify-content: center; }
@@ -540,6 +571,54 @@ body {
 
 <script>
 const STORAGE_KEY = "mma:entries:v1";
+const KR_HOLIDAYS = {
+  "2025-01-01": "신정", "2025-01-27": "임시공휴일", "2025-01-28": "설날 연휴", "2025-01-29": "설날", "2025-01-30": "설날 연휴",
+  "2025-03-01": "삼일절", "2025-03-03": "삼일절 대체", "2025-05-05": "어린이날·부처님오신날",
+  "2025-06-03": "대통령 선거일", "2025-06-06": "현충일", "2025-08-15": "광복절",
+  "2025-10-03": "개천절", "2025-10-05": "추석 연휴", "2025-10-06": "추석", "2025-10-07": "추석 연휴",
+  "2025-10-08": "추석 대체", "2025-10-09": "한글날", "2025-12-25": "성탄절",
+  "2026-01-01": "신정", "2026-02-16": "설날 연휴", "2026-02-17": "설날", "2026-02-18": "설날 연휴",
+  "2026-03-01": "삼일절", "2026-03-02": "삼일절 대체", "2026-05-01": "노동절", "2026-05-05": "어린이날",
+  "2026-05-24": "부처님오신날", "2026-05-25": "부처님오신날 대체", "2026-06-03": "지방선거일", "2026-06-06": "현충일",
+  "2026-07-17": "제헌절", "2026-08-15": "광복절", "2026-08-17": "광복절 대체",
+  "2026-09-24": "추석 연휴", "2026-09-25": "추석", "2026-09-26": "추석 연휴",
+  "2026-10-03": "개천절", "2026-10-05": "개천절 대체", "2026-10-09": "한글날", "2026-12-25": "성탄절",
+  "2027-01-01": "신정", "2027-02-06": "설날 연휴", "2027-02-07": "설날", "2027-02-08": "설날 연휴",
+  "2027-02-09": "설날 대체", "2027-03-01": "삼일절", "2027-05-01": "노동절", "2027-05-05": "어린이날",
+  "2027-05-13": "부처님오신날", "2027-06-06": "현충일", "2027-07-17": "제헌절",
+  "2027-08-15": "광복절", "2027-08-16": "광복절 대체", "2027-09-14": "추석 연휴", "2027-09-15": "추석",
+  "2027-09-16": "추석 연휴", "2027-10-03": "개천절", "2027-10-04": "개천절 대체",
+  "2027-10-09": "한글날", "2027-10-11": "한글날 대체", "2027-12-25": "성탄절", "2027-12-27": "성탄절 대체"
+};
+
+const REST_KEY = "mma:rest:v1";
+let restState = { items: {}, updated: 0 };
+function restLoad() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(REST_KEY)) || {};
+    if (Array.isArray(raw.dates)) {
+      // 이전 버전(단순 배열) 마이그레이션 -> 전부 '내가 쉼'으로 변환
+      const items = {};
+      raw.dates.forEach(d => { items[d] = "rest"; });
+      restState = { items, updated: raw.updated || Date.now() };
+    } else {
+      restState = { items: raw.items || {}, updated: raw.updated || 0 };
+    }
+  } catch (e) { restState = { items: {}, updated: 0 }; }
+}
+function restSave() {
+  restState.updated = Date.now();
+  localStorage.setItem(REST_KEY, JSON.stringify(restState));
+  if (typeof syncSoon === "function") syncSoon();
+}
+function restToggle(dateStr) {
+  const cur = restState.items[dateStr];
+  if (!cur) restState.items[dateStr] = "rest";
+  else if (cur === "rest") restState.items[dateStr] = "closed";
+  else delete restState.items[dateStr];
+  restSave();
+}
+
 const TRAINING_TYPES = [
   { id: "technique", label: "기술훈련", color: "type-technique" },
   { id: "mma_sparring", label: "MMA 스파링", color: "type-mma-sparring" },
@@ -955,10 +1034,17 @@ async function syncNow(quiet) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries));
     localStorage.setItem(FORTUNE_KEY, JSON.stringify(fState));
 
+    const remoteRest = remote.rest || { items: {}, updated: 0 };
+    if ((remoteRest.updated || 0) > (restState.updated || 0)) {
+      restState = { items: remoteRest.items || {}, updated: remoteRest.updated || 0 };
+    }
+    localStorage.setItem(REST_KEY, JSON.stringify(restState));
+
     const payload = {
       entries: state.entries,
       fortune: { cats: fState.cats, history: fState.history, today: fState.today },
       tombs: tombs,
+      rest: restState,
     };
     const put = await fetch(base + "/data", { method: "PUT", headers, body: JSON.stringify(payload) });
     if (!put.ok) throw new Error("저장 실패 " + put.status);
@@ -1074,22 +1160,41 @@ function renderCalendar() {
     const dayEntries = byDate[dateStr] || [];
     const has = dayEntries.length > 0;
     const isToday = dateStr === todayString;
+    const holidayName = KR_HOLIDAYS[dateStr];
+    const restType = restState.items[dateStr];
     const allTypes = [...new Set(dayEntries.flatMap(e => e.types || []))];
     const dots = allTypes.slice(0,4).map(t => `<span class="cal-dot ${typeMeta(t).color}"></span>`).join("");
-    cells += `<div class="cal-cell ${has?'has-entry':''} ${isToday?'today':''}" ${has?`data-date="${dateStr}"`:''}>
-      <span>${d}</span>
+    const cls = [
+      "cal-cell",
+      has ? "has-entry" : "",
+      isToday ? "today" : "",
+      holidayName ? "holiday" : "",
+      restType && !has ? `rest-marked rest-${restType}` : "",
+      !has ? "rest" : ""
+    ].filter(Boolean).join(" ");
+    const restLabel = restType === "rest" ? "쉼" : restType === "closed" ? "휴관" : "";
+    cells += `<div class="${cls}" data-date="${dateStr}">
+      <span class="cal-daynum">${d}</span>
+      ${holidayName ? `<span class="cal-holiday-name">${holidayName}</span>` : ""}
+      ${restLabel && !has ? `<span class="cal-rest-label">${restLabel}</span>` : ""}
       ${dots ? `<div class="cal-dots">${dots}</div>` : ''}
     </div>`;
   }
   $("#cal-grid").innerHTML = cells;
   $("#cal-legend").innerHTML = TRAINING_TYPES.map(t =>
     `<span class="cal-legend-item"><span class="cal-dot ${t.color}"></span>${t.label}</span>`
-  ).join("");
+  ).join("") + `<span class="cal-legend-item" style="color:#f87171">● 공휴일</span><span class="cal-legend-item" style="color:#a1a1aa">● 내가 쉼</span><span class="cal-legend-item" style="color:#d97706">● 체육관 휴관</span><span class="cal-legend-item" style="color:var(--text-dimmer)">(빈 날짜 클릭 시 순서대로 전환)</span>`;
 
   $$("#cal-grid .cal-cell.has-entry").forEach(cell => {
     cell.addEventListener("click", () => {
       const dayEntries = state.entries.filter(e => e.date === cell.dataset.date);
       if (dayEntries.length) openEdit(dayEntries[0].id);
+    });
+  });
+  $$("#cal-grid .cal-cell.rest").forEach(cell => {
+    cell.addEventListener("click", () => {
+      restToggle(cell.dataset.date);
+      renderCalendar();
     });
   });
 }
@@ -1424,6 +1529,7 @@ function importData(file) {
 
 loadEntries();
 fLoad();
+restLoad();
 syncLoadCfg();
 renderStats();
 renderMonthly();
