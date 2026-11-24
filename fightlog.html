@@ -240,6 +240,21 @@ body {
 .footer-link { background: transparent; border: none; color: var(--text-dimmer); cursor: pointer; font-size: 0.75rem; text-decoration: underline; font-family: 'Noto Sans KR', sans-serif; }
 .footer-link:hover { color: var(--text-dim); }
 
+.trash-note { margin: -0.65rem 0 1rem; color: var(--text-dimmer); font-size: 0.78rem; line-height: 1.5; }
+.trash-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.trash-empty { padding: 2.5rem 1rem; border: 1px dashed var(--border); color: var(--text-dimmer); text-align: center; }
+.trash-item { border: 1px solid var(--border); background: rgba(24,24,27,0.45); padding: 1rem; }
+.trash-item-head { display: flex; justify-content: space-between; gap: 0.75rem; align-items: flex-start; }
+.trash-item-date { color: var(--text); font-weight: 700; }
+.trash-item-meta { margin-top: 0.3rem; color: var(--text-dimmer); font-size: 0.75rem; line-height: 1.45; }
+.trash-item-preview { margin-top: 0.65rem; color: var(--text-dim); font-size: 0.82rem; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trash-item-actions { display: flex; gap: 0.45rem; flex-shrink: 0; }
+.trash-restore, .trash-delete { border: 1px solid var(--border); background: transparent; padding: 0.45rem 0.65rem; cursor: pointer; font-family: inherit; font-size: 0.75rem; }
+.trash-restore { color: #4ade80; border-color: #166534; }
+.trash-delete { color: #f87171; border-color: #7f1d1d; }
+.undo-toast { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 80; width: min(calc(100% - 2rem), 28rem); display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; border: 1px solid #3f3f46; background: #18181b; box-shadow: 0 12px 35px rgba(0,0,0,0.45); color: var(--text); font-size: 0.85rem; }
+.undo-toast button { border: none; background: transparent; color: var(--accent-bright); font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
 .type-technique { background: #3f3f46; }
 .type-mma-sparring { background: #dc2626; }
 .type-grappling { background: #4338ca; }
@@ -458,6 +473,7 @@ body {
     <div class="footer-actions">
       <button class="footer-link" id="sync-btn">동기화</button>
       <button class="footer-link" id="sync-cfg-btn">동기화 설정</button>
+      <button class="footer-link" id="trash-btn">휴지통 <span id="trash-count">0</span></button>
       <button class="footer-link" id="export-btn">백업 내보내기</button>
       <button class="footer-link" id="import-btn">백업 가져오기</button>
       <input type="file" id="import-file" accept=".json" style="display:none">
@@ -601,9 +617,27 @@ body {
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="trash-modal" aria-hidden="true">
+  <div class="modal" style="max-width:46rem">
+    <div class="modal-header">
+      <h2 class="modal-title">휴지통</h2>
+      <button class="modal-close" id="trash-close">×</button>
+    </div>
+    <p class="trash-note">삭제한 훈련 기록은 이 기기에 30일간 보관됩니다.</p>
+    <div class="trash-list" id="trash-list"></div>
+  </div>
+</div>
+
+<div class="undo-toast hidden" id="undo-toast" role="status" aria-live="polite">
+  <span>기록을 휴지통으로 이동했습니다.</span>
+  <button id="undo-btn">되돌리기</button>
+</div>
+
 <script>
 const STORAGE_KEY = "mma:entries:v1";
 const RECORD_DRAFT_KEY = "mma:record:draft:v1";
+const TRASH_KEY = "mma:trash:v1";
+const TRASH_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 const KR_HOLIDAYS = {
   "2025-01-01": "신정", "2025-01-27": "임시공휴일", "2025-01-28": "설날 연휴", "2025-01-29": "설날", "2025-01-30": "설날 연휴",
   "2025-03-01": "삼일절", "2025-03-03": "삼일절 대체", "2025-05-05": "어린이날·부처님오신날",
@@ -968,6 +1002,140 @@ function loadEntries() {
   catch (e) { state.entries = []; }
 }
 function saveEntries() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries)); syncSoon(); }
+
+/* ===== 30일 휴지통 + 삭제 직후 되돌리기 ===== */
+let trashEntries = [];
+let lastDeletedId = null;
+let undoTimer = null;
+
+function trashSave() {
+  localStorage.setItem(TRASH_KEY, JSON.stringify(trashEntries));
+  renderTrashCount();
+}
+
+function trashPrune() {
+  const cutoff = Date.now() - TRASH_RETENTION_MS;
+  const before = trashEntries.length;
+  trashEntries = trashEntries.filter(item => item && item.entry && Number(item.deletedAt || 0) >= cutoff);
+  if (trashEntries.length !== before) trashSave();
+}
+
+function trashLoad() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TRASH_KEY)) || [];
+    trashEntries = Array.isArray(raw) ? raw : [];
+  } catch (e) {
+    trashEntries = [];
+  }
+  trashPrune();
+  renderTrashCount();
+}
+
+function trashAdd(entry) {
+  const id = String(entry.id);
+  trashEntries = trashEntries.filter(item => String(item.entry && item.entry.id) !== id);
+  trashEntries.unshift({ entry: JSON.parse(JSON.stringify(entry)), deletedAt: Date.now() });
+  trashSave();
+}
+
+function renderTrashCount() {
+  const el = $("#trash-count");
+  if (el) el.textContent = String(trashEntries.length);
+}
+
+function renderTrashList() {
+  trashPrune();
+  const list = $("#trash-list");
+  if (!trashEntries.length) {
+    list.innerHTML = '<div class="trash-empty">휴지통이 비어 있습니다.</div>';
+    return;
+  }
+  list.innerHTML = [...trashEntries]
+    .sort((a, b) => b.deletedAt - a.deletedAt)
+    .map(item => {
+      const entry = item.entry;
+      const labels = (entry.types || []).map(id => typeMeta(id).label).join(" · ");
+      const deleted = new Date(item.deletedAt).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      const preview = entry.techniques || entry.reflection || "작성 내용 없음";
+      return `<div class="trash-item">
+        <div class="trash-item-head">
+          <div>
+            <div class="trash-item-date">${escapeHtml(entry.date || "날짜 없음")}</div>
+            <div class="trash-item-meta">${escapeHtml(labels || "훈련 기록")} · ${Number(entry.duration || 0)}분<br>삭제 ${escapeHtml(deleted)}</div>
+          </div>
+          <div class="trash-item-actions">
+            <button class="trash-restore" data-trash-restore="${escapeHtml(String(entry.id))}">복구</button>
+            <button class="trash-delete" data-trash-delete="${escapeHtml(String(entry.id))}">영구삭제</button>
+          </div>
+        </div>
+        <div class="trash-item-preview">${escapeHtml(preview)}</div>
+      </div>`;
+    }).join("");
+  $$('[data-trash-restore]').forEach(btn => btn.addEventListener("click", () => restoreTrashEntry(btn.dataset.trashRestore)));
+  $$('[data-trash-delete]').forEach(btn => btn.addEventListener("click", () => permanentlyDeleteTrashEntry(btn.dataset.trashDelete)));
+}
+
+function openTrashModal() {
+  renderTrashList();
+  const modal = $("#trash-modal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeTrashModal() {
+  const modal = $("#trash-modal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function hideUndoToast() {
+  clearTimeout(undoTimer);
+  $("#undo-toast").classList.add("hidden");
+}
+
+function showUndoToast(id) {
+  lastDeletedId = String(id);
+  clearTimeout(undoTimer);
+  $("#undo-toast").classList.remove("hidden");
+  undoTimer = setTimeout(hideUndoToast, 10000);
+}
+
+function restoreTrashEntry(id) {
+  const key = String(id);
+  const index = trashEntries.findIndex(item => String(item.entry && item.entry.id) === key);
+  if (index < 0) return;
+  const item = trashEntries[index];
+  const restored = { ...migrateEntry({ ...item.entry }), updated: Date.now() };
+  state.entries = state.entries.filter(entry => String(entry.id) !== key);
+  state.entries.unshift(restored);
+  state.entries.sort((a, b) => a.date < b.date ? 1 : -1);
+  trashEntries.splice(index, 1);
+  tombs.entries = (tombs.entries || []).filter(t => String(t.id) !== key);
+  tombSave();
+  trashSave();
+  saveEntries();
+  renderStats();
+  renderMonthly();
+  renderEntries();
+  renderTrashList();
+  if (state.view === "calendar") renderCalendar();
+  if (lastDeletedId === key) {
+    lastDeletedId = null;
+    hideUndoToast();
+  }
+}
+
+function permanentlyDeleteTrashEntry(id) {
+  const key = String(id);
+  if (!confirm("이 기록을 휴지통에서도 영구 삭제할까요? 복구할 수 없습니다.")) return;
+  trashEntries = trashEntries.filter(item => String(item.entry && item.entry.id) !== key);
+  trashSave();
+  renderTrashList();
+  if (lastDeletedId === key) {
+    lastDeletedId = null;
+    hideUndoToast();
+  }
+}
 
 /* ===== 동기화 (Cloudflare Worker + KV) ===== */
 const SYNC_CFG_KEY = "mma:sync:cfg";
@@ -1594,7 +1762,10 @@ function saveCurrent() {
 }
 
 function deleteEntry(id) {
-  if (!confirm("이 기록을 삭제할까요?")) return;
+  const entry = state.entries.find(e => String(e.id) === String(id));
+  if (!entry) return;
+  if (!confirm("이 기록을 휴지통으로 이동할까요? 30일 안에 복구할 수 있습니다.")) return;
+  trashAdd(entry);
   state.entries = state.entries.filter(e => e.id !== id);
   tombAdd("entries", id);
   saveEntries();
@@ -1602,6 +1773,7 @@ function deleteEntry(id) {
   renderMonthly();
   renderEntries();
   if (state.view === "calendar") renderCalendar();
+  showUndoToast(id);
 }
 
 function exportData() {
@@ -1646,6 +1818,7 @@ loadEntries();
 fLoad();
 restLoad();
 syncLoadCfg();
+trashLoad();
 renderStats();
 renderMonthly();
 renderFilters();
@@ -1664,7 +1837,11 @@ $("#modal").addEventListener("click", (e) => { if (e.target === $("#modal")) clo
 $("#modal").addEventListener("input", saveRecordDraft);
 $("#modal").addEventListener("change", saveRecordDraft);
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !$("#modal").classList.contains("hidden")) {
+  if (e.key !== "Escape") return;
+  if (!$("#trash-modal").classList.contains("hidden")) {
+    e.preventDefault();
+    closeTrashModal();
+  } else if (!$("#modal").classList.contains("hidden")) {
     e.preventDefault();
     closeModal();
   }
@@ -1677,6 +1854,10 @@ $("#f-condition").addEventListener("input", (e) => { $("#condition-display").tex
 $("#export-btn").addEventListener("click", exportData);
 $("#import-btn").addEventListener("click", () => $("#import-file").click());
 $("#import-file").addEventListener("change", (e) => { if (e.target.files[0]) importData(e.target.files[0]); });
+$("#trash-btn").addEventListener("click", openTrashModal);
+$("#trash-close").addEventListener("click", closeTrashModal);
+$("#trash-modal").addEventListener("click", (e) => { if (e.target === $("#trash-modal")) closeTrashModal(); });
+$("#undo-btn").addEventListener("click", () => { if (lastDeletedId !== null) restoreTrashEntry(lastDeletedId); });
 
 $("#f-btn-kr").addEventListener("click", () => { window.open("https://www.youtube.com/results?search_query="+encodeURIComponent(fState.today.move.ytkr), "_blank"); });
 $("#f-btn-en").addEventListener("click", () => { window.open("https://www.youtube.com/results?search_query="+encodeURIComponent(fState.today.move.yt), "_blank"); });
@@ -1722,3 +1903,4 @@ $("#detail-popup").addEventListener("click", (e) => { if (e.target === $("#detai
 </script>
 </body>
 </html>
+
