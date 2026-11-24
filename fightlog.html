@@ -603,6 +603,7 @@ body {
 
 <script>
 const STORAGE_KEY = "mma:entries:v1";
+const RECORD_DRAFT_KEY = "mma:record:draft:v1";
 const KR_HOLIDAYS = {
   "2025-01-01": "신정", "2025-01-27": "임시공휴일", "2025-01-28": "설날 연휴", "2025-01-29": "설날", "2025-01-30": "설날 연휴",
   "2025-03-01": "삼일절", "2025-03-03": "삼일절 대체", "2025-05-05": "어린이날·부처님오신날",
@@ -1418,6 +1419,75 @@ function renderTypeGrid() {
   updateRoundsFields();
 }
 
+function collectRecordDraft() {
+  return {
+    savedAt: Date.now(),
+    date: $("#f-date").value,
+    duration: $("#f-duration").value,
+    cardio: $("#f-cardio").value,
+    condition: $("#f-condition").value,
+    weight: $("#f-weight").value,
+    mma_sessions: $("#f-mma-sessions").value,
+    mma_rounds: $("#f-mma-rounds").value,
+    grappling_sessions: $("#f-grappling-sessions").value,
+    grappling_rounds: $("#f-grappling-rounds").value,
+    techniques: $("#f-techniques").value,
+    reflection: $("#f-reflection").value,
+    types: [...state.formTypes],
+    classType: state.formClass,
+    mmaFocus: state.formMmaFocus,
+    sparringMode: state.formSparringMode
+  };
+}
+
+function saveRecordDraft() {
+  if (state.editingId !== null) return;
+  try { localStorage.setItem(RECORD_DRAFT_KEY, JSON.stringify(collectRecordDraft())); }
+  catch (e) { /* 저장 공간이 부족해도 기록 화면은 계속 사용 */ }
+}
+
+function clearRecordDraft() {
+  try { localStorage.removeItem(RECORD_DRAFT_KEY); }
+  catch (e) { /* ignore */ }
+}
+
+function restoreRecordDraft() {
+  try {
+    const draft = JSON.parse(localStorage.getItem(RECORD_DRAFT_KEY));
+    if (!draft || typeof draft !== "object") return false;
+    const validTypes = new Set(TRAINING_TYPES.map(t => t.id));
+    const restoredTypes = Array.isArray(draft.types) ? draft.types.filter(t => validTypes.has(t)) : [];
+    state.formTypes = restoredTypes.length ? restoredTypes : ["technique"];
+    state.formClass = CLASS_TYPES.some(c => c.id === draft.classType) ? draft.classType : null;
+    state.formMmaFocus = MMA_FOCUS.some(c => c.id === draft.mmaFocus) ? draft.mmaFocus : null;
+    state.formSparringMode = SPARRING_MODE.some(c => c.id === draft.sparringMode) ? draft.sparringMode : null;
+    $("#f-date").value = draft.date || todayStr();
+    $("#f-duration").value = draft.duration || 60;
+    $("#f-cardio").value = draft.cardio || 6;
+    $("#cardio-display").textContent = $("#f-cardio").value;
+    $("#f-condition").value = draft.condition || 7;
+    $("#condition-display").textContent = $("#f-condition").value;
+    $("#f-weight").value = draft.weight || "";
+    $("#f-mma-sessions").value = draft.mma_sessions || "";
+    $("#f-mma-rounds").value = draft.mma_rounds || "";
+    $("#f-grappling-sessions").value = draft.grappling_sessions || "";
+    $("#f-grappling-rounds").value = draft.grappling_rounds || "";
+    $("#f-techniques").value = draft.techniques || "";
+    $("#f-reflection").value = draft.reflection || "";
+    return true;
+  } catch (e) {
+    clearRecordDraft();
+    return false;
+  }
+}
+
+function showRecordModal() {
+  const modal = $("#modal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  modal.scrollTop = 0;
+}
+
 function openNew() {
   state.editingId = null;
   state.formTypes = ["technique"];
@@ -1437,11 +1507,12 @@ function openNew() {
   $("#f-grappling-rounds").value = "";
   $("#f-techniques").value = "";
   $("#f-reflection").value = "";
+  restoreRecordDraft();
   renderTypeGrid();
   renderClassGrid();
   renderMmaFocusGrid();
   renderSparringModeGrid();
-  $("#modal").classList.remove("hidden");
+  showRecordModal();
 }
 
 function openEdit(id) {
@@ -1469,10 +1540,20 @@ function openEdit(id) {
   renderClassGrid();
   renderMmaFocusGrid();
   renderSparringModeGrid();
-  $("#modal").classList.remove("hidden");
+  showRecordModal();
 }
 
-function closeModal() { $("#modal").classList.add("hidden"); }
+function closeModal({ preserveDraft = true } = {}) {
+  if (preserveDraft) saveRecordDraft();
+  const modal = $("#modal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function cancelModal() {
+  if (state.editingId === null) clearRecordDraft();
+  closeModal({ preserveDraft: false });
+}
 
 function saveCurrent() {
   const date = $("#f-date").value;
@@ -1495,7 +1576,8 @@ function saveCurrent() {
     reflection: $("#f-reflection").value
   };
 
-  if (state.editingId) {
+  const wasEditing = state.editingId !== null;
+  if (wasEditing) {
     state.entries = state.entries.map(e => e.id === state.editingId ? { ...e, ...data, updated: Date.now() } : e);
   } else {
     const now = Date.now();
@@ -1503,7 +1585,8 @@ function saveCurrent() {
   }
   state.entries.sort((a,b) => a.date < b.date ? 1 : -1);
   saveEntries();
-  closeModal();
+  if (!wasEditing) clearRecordDraft();
+  closeModal({ preserveDraft: false });
   renderStats();
   renderMonthly();
   renderEntries();
@@ -1574,10 +1657,21 @@ $$(".view-btn").forEach(b => b.addEventListener("click", () => setView(b.dataset
 $("#cal-prev").addEventListener("click", () => { calMonth.setMonth(calMonth.getMonth()-1); renderCalendar(); });
 $("#cal-next").addEventListener("click", () => { calMonth.setMonth(calMonth.getMonth()+1); renderCalendar(); });
 $("#add-btn").addEventListener("click", openNew);
-$("#modal-close").addEventListener("click", closeModal);
-$("#cancel-btn").addEventListener("click", closeModal);
+$("#modal-close").addEventListener("click", () => closeModal());
+$("#cancel-btn").addEventListener("click", cancelModal);
 $("#save-btn").addEventListener("click", saveCurrent);
 $("#modal").addEventListener("click", (e) => { if (e.target === $("#modal")) closeModal(); });
+$("#modal").addEventListener("input", saveRecordDraft);
+$("#modal").addEventListener("change", saveRecordDraft);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("#modal").classList.contains("hidden")) {
+    e.preventDefault();
+    closeModal();
+  }
+});
+window.addEventListener("pagehide", () => {
+  if (!$("#modal").classList.contains("hidden")) saveRecordDraft();
+});
 $("#f-cardio").addEventListener("input", (e) => { $("#cardio-display").textContent = e.target.value; });
 $("#f-condition").addEventListener("input", (e) => { $("#condition-display").textContent = e.target.value; });
 $("#export-btn").addEventListener("click", exportData);
